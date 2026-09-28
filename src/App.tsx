@@ -374,13 +374,13 @@ function App() {
     <div className="app-shell">
       <nav className="topbar">
         <div className="nav-inner">
-          <a className="brand" href="#home" onClick={() => setMobileNav(false)}><span className="brand-mark"><UtensilsCrossed size={19}/></span><span>warung<span className="brand-light">bu siti</span></span></a>
+          <a className="brand" href="#home" onClick={() => setMobileNav(false)}><span className="brand-mark"><UtensilsCrossed size={19}/></span><span>WMJ<span className="brand-light">Store</span></span></a>
           <button className="mobile-toggle" aria-label="Buka navigasi" onClick={() => setMobileNav(!mobileNav)}><MenuIcon size={22}/></button>
           <div className={`nav-links ${mobileNav ? 'show' : ''}`}>
             <a href="#menu" onClick={() => setMobileNav(false)}>Menu</a>
             <a href="#cerita" onClick={() => setMobileNav(false)}>Tentang</a>
             <a href="#lokasi" onClick={() => setMobileNav(false)}>Lokasi</a>
-            <a className="nav-contact" href={wa('Halo Warung Bu Siti, saya ingin bertanya.')} target="_blank" rel="noreferrer"><Phone size={15}/> Hubungi kami</a>
+            <a className="nav-contact" href={wa('Halo Bu Heni, saya ingin bertanya.')} target="_blank" rel="noreferrer"><Phone size={15}/> Hubungi kami</a>
           </div>
         </div>
       </nav>
@@ -396,7 +396,7 @@ function App() {
               <span><Clock3 size={16}/> Buka hari ini · 08.00–21.00</span>
             </div>
             <div className="hero-actions">
-              <a className="btn-primary" href={wa('Halo Bu Siti, saya mau pesan menu.')} target="_blank" rel="noreferrer"><ShoppingBag size={17}/> Pesan via WhatsApp <ArrowRight size={16}/></a>
+              <a className="btn-primary" href={wa('Halo Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer"><ShoppingBag size={17}/> Pesan via WhatsApp <ArrowRight size={16}/></a>
               <a className="btn-outline" href="#lokasi">Lihat lokasi <ArrowDown size={15}/></a>
             </div>
             <div className="hero-note">
@@ -406,8 +406,8 @@ function App() {
             </div>
           </div>
           <div className="hero-visual">
-            <img src="/images/hero-warung.jpg" alt="Hidangan rumahan Warung Bu Siti"/>
-            <div className="image-stamp"><span>♡</span><div><b>Dimasak dengan hati</b><small>Resep keluarga Bu Siti</small></div></div>
+            <img src="/images/hero-warung.jpg" alt="Hidangan rumahan Warung"/>
+            <div className="image-stamp"><span>♡</span><div><b>Dimasak dengan hati</b><small>Resep keluarga Turun Temurun</small></div></div>
             <div className="vertical-note">DAPUR RUMAHAN · YOGYAKARTA</div>
           </div>
         </section>
@@ -461,19 +461,19 @@ function App() {
 
         <section className="story-section" id="cerita">
           <div className="story-image">
-            <img src="/images/ayam-bakar.jpg" alt="Hidangan khas dapur Bu Siti"/>
+            <img src="/images/ayam-bakar.jpg" alt="Hidangan khas dapur"/>
             <span className="story-stamp">DARI DAPUR<br/>DENGAN CINTA</span>
           </div>
           <div className="story-copy">
             <div className="eyebrow">CERITA KAMI</div>
             <h2>Rasa sederhana,<br/><em>cerita istimewa.</em></h2>
-            <p>Warung Bu Siti bermula dari dapur kecil dan resep turun-temurun. Kini, kami tetap percaya bahwa makanan terbaik adalah yang dibuat dengan bahan segar, bumbu pilihan, dan sepenuh hati.</p>
+            <p>Warung ini bermula dari dapur kecil dan resep turun-temurun. Kini, kami tetap percaya bahwa makanan terbaik adalah yang dibuat dengan bahan segar, bumbu pilihan, dan sepenuh hati.</p>
             <div className="story-facts">
               <div><b>12<span>+</span></b><small>Tahun menyajikan rasa</small></div>
               <div><b>100<span>%</span></b><small>Bahan segar pilihan</small></div>
               <div><b>♡</b><small>Dibuat dengan cinta</small></div>
             </div>
-            <button className="text-link" onClick={() => setAboutOpen(true)}>Kenali Warung Bu Siti <ArrowRight size={16}/></button>
+            <button className="text-link" onClick={() => setAboutOpen(true)}>Kenali WMJ Store<ArrowRight size={16}/></button>
           </div>
         </section>
 
@@ -484,7 +484,7 @@ function App() {
             <p>Sepiring masakan rumahan hangat selalu punya tempat untukmu.</p>
             <div className="address-line">
               <span className="address-icon"><MapPin size={18}/></span>
-              <div><b>Warung Bu Siti</b><span>Jl. Melati No. 18, Baciro, Gondokusuman,<br/>Kota Yogyakarta, DI Yogyakarta 55225</span></div>
+              <div><b>WMJ Store</b><span>Jl. Melati No. 18, Baciro, Gondokusuman,<br/>Kota Yogyakarta, DI Yogyakarta 55225</span></div>
             </div>
             <div className="address-line">
               <span className="address-icon"><Clock3 size={18}/></span>
@@ -497,7 +497,7 @@ function App() {
               <div className="map-road road-one"/><div className="map-road road-two"/><div className="map-road road-three"/>
               <div className="map-block block-one"/><div className="map-block block-two"/><div className="map-block block-three"/><div className="map-block block-four"/>
               <div className="map-pin"><MapPin size={22} fill="currentColor"/></div>
-              <div className="map-caption"><span className="map-caption-icon">🍲</span><div><b>Warung Bu Siti</b><small>Masakan rumahan · 5 menit dari sini</small></div><ArrowRight size={16}/></div>
+              <div className="map-caption"><span className="map-caption-icon">🍲</span><div><b>Warung Bu Heni</b><small>Masakan rumahan · 5 menit dari sini</small></div><ArrowRight size={16}/></div>
               <span className="map-label label-a">BACIRO</span><span className="map-label label-b">JL. MELATI</span>
             </div>
             <span className="map-credit">PETA AREA WARUNG</span>
@@ -506,21 +506,21 @@ function App() {
 
         <section className="cta-strip">
           <div className="cta-sun">☀</div>
-          <div><h2>Lagi lapar? <em>Bu Siti siap masak.</em></h2><p>Pesan dulu, nanti kami siapkan hangat-hangat.</p></div>
-          <a href={wa('Halo Bu Siti, saya ingin memesan makanan.')} target="_blank" rel="noreferrer" className="cta-button">Pesan via WhatsApp <ArrowRight size={16}/></a>
+          <div><h2>Lagi lapar? <em>Bu Heni, siap masak.</em></h2><p>Pesan dulu, nanti kami siapkan hangat-hangat.</p></div>
+          <a href={wa('Halo Bu Heni, saya ingin memesan makanan.')} target="_blank" rel="noreferrer" className="cta-button">Pesan via WhatsApp <ArrowRight size={16}/></a>
         </section>
       </main>
 
       <footer className="footer">
-        <a className="brand" href="#home"><span className="brand-mark"><UtensilsCrossed size={17}/></span><span>warung<span className="brand-light">bu siti</span></span></a>
-        <span>© 2026 Warung Bu Siti <i>·</i> Digital Menu</span>
+        <a className="brand" href="#home"><span className="brand-mark"><UtensilsCrossed size={17}/></span><span>warung<span className="brand-light">bu Heni</span></span></a>
+        <span>© 2026 Warung Bu Heni <i>·</i> Digital Menu</span>
         <div className="footer-social">
           <a href="https://instagram.com" aria-label="Instagram"><Instagram size={17}/></a>
           <a href="tel:+6281234567890" aria-label="Telepon"><Phone size={16}/></a>
           <button onClick={() => setAdmin(true)} title="Kelola menu"><Settings2 size={17}/></button>
         </div>
       </footer>
-      <a className="floating-wa" href={wa('Halo Bu Siti, saya mau pesan menu.')} target="_blank" rel="noreferrer" aria-label="Chat WhatsApp"><span className="wa-pulse"/><WhatsAppMark/></a>
+      <a className="floating-wa" href={wa('Halo Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer" aria-label="Chat WhatsApp"><span className="wa-pulse"/><WhatsAppMark/></a>
 
       {selected && (
         <div className="modal-backdrop" onClick={() => setSelected(null)}>
@@ -532,7 +532,7 @@ function App() {
               <h2>{selected.name}</h2>
               <p>{selected.description}</p>
               <div className="modal-price">{money(selected.price)}</div>
-              <a className="btn-primary modal-order" href={wa(`Halo Bu Siti, saya ingin pesan ${selected.name} (${money(selected.price)}).`)} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan menu ini</a>
+              <a className="btn-primary modal-order" href={wa(`Halo Bu Heni, saya ingin pesan ${selected.name} (${money(selected.price)}).`)} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan menu ini</a>
             </div>
           </div>
         </div>
@@ -544,9 +544,9 @@ function App() {
             <button className="modal-close" onClick={() => setAboutOpen(false)}><X size={20}/></button>
             <div className="eyebrow">CERITA WARUNG</div>
             <h2>Rumah kecil untuk rasa yang besar.</h2>
-            <p>Sejak 2012, Warung Bu Siti menyajikan masakan rumahan khas Jawa dengan resep keluarga. Kami memilih bahan segar dari pasar setiap pagi dan memasak dalam porsi kecil agar selalu hangat saat sampai di meja.</p>
+            <p>Sejak 2012, WMJ Store menyajikan masakan rumahan khas Jawa dengan resep keluarga. Kami memilih bahan segar dari pasar setiap pagi dan memasak dalam porsi kecil agar selalu hangat saat sampai di meja.</p>
             <div className="about-hours"><Clock3 size={18}/><span><b>Jam operasional</b><br/>Setiap hari · 08.00–21.00 WIB</span></div>
-            <a className="btn-primary" href={wa('Halo Bu Siti!')} target="_blank" rel="noreferrer">Sapa Bu Siti <ArrowRight size={16}/></a>
+            <a className="btn-primary" href={wa('Halo Bu Heni!')} target="_blank" rel="noreferrer">Sapa Bu Heni <ArrowRight size={16}/></a>
           </div>
         </div>
       )}
@@ -605,7 +605,7 @@ function App() {
                 <div className="admin-intro">
                   <div className="eyebrow">DAPUR DIGITAL · ADMIN</div>
                   <h1>Kelola menu <em>dengan mudah.</em></h1>
-                  <p>Perbarui daftar hidangan Warung Bu Siti.</p>
+                  <p>Perbarui daftar hidangan WMJ Store.</p>
                 </div>
                 <div className="admin-stats">
                   <div><span>MENU AKTIF</span><b>{dishes.length.toString().padStart(2, '0')}</b></div>
