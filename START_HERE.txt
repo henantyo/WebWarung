@@ -1,0 +1,130 @@
+╔══════════════════════════════════════════════════════════════╗
+║                  🚀 WEBWARUNG + SUPABASE 🚀                 ║
+║                    READY TO USE GUIDE                       ║
+╚══════════════════════════════════════════════════════════════╝
+
+✅ SETUP SUDAH SELESAI! Ikuti langkah ini:
+
+─────────────────────────────────────────────────────────────
+1️⃣  SETUP DATABASE DI SUPABASE (5 menit)
+─────────────────────────────────────────────────────────────
+
+  a) Buka https://app.supabase.com
+  b) Login dan pilih project lmrqucodhdqryszxhwbo
+  c) Klik "SQL Editor" → "New Query"
+  d) Copy-paste semua kode dari: SUPABASE_SETUP.sql
+  e) Klik "Run" (Ctrl+Enter)
+  
+  ✓ Tunggu sampai "Success"
+  ✓ Tables "dishes" dan "settings" sudah siap!
+
+─────────────────────────────────────────────────────────────
+2️⃣  BUAT ADMIN USER DI SUPABASE (2 menit)
+─────────────────────────────────────────────────────────────
+
+  a) Klik "Authentication" → "Users"
+  b) Klik tombol hijau "Add user"
+  c) Isi:
+     Email: admin@gmail.com
+     Password: segogoreng1
+  d) Klik "Create user"
+  
+  ✓ Admin user sudah siap!
+
+─────────────────────────────────────────────────────────────
+3️⃣  ENABLE REALTIME DI SUPABASE (1 menit)
+─────────────────────────────────────────────────────────────
+
+  a) Klik icon "⚙️ Settings" (kiri bawah)
+  b) Pilih tab "API"
+  c) Cari "Realtime" → pastikan toggle HIJAU ✓
+  
+  ✓ Real-time updates aktif!
+
+─────────────────────────────────────────────────────────────
+4️⃣  SETUP STORAGE UNTUK FOTO (2 menit)
+─────────────────────────────────────────────────────────────
+
+  a) Klik "Storage" di sidebar
+  b) Klik tombol "Create new bucket"
+  c) Bucket name: dishes
+  d) Pilih "Public" ✓
+  e) Klik "Create bucket"
+  
+  ✓ Storage siap untuk upload foto!
+
+─────────────────────────────────────────────────────────────
+5️⃣  TEST APLIKASI (1 menit)
+─────────────────────────────────────────────────────────────
+
+  Di Terminal, jalankan:
+  
+    npm run dev
+  
+  Buka browser ke:
+    http://localhost:5173
+  
+  Klik icon ⚙️ (Settings) di footer → Login dengan:
+    Email: admin@gmail.com
+    Password: segogoreng1
+  
+  ✓ Admin panel muncul? SUCCESS! ✅
+
+─────────────────────────────────────────────────────────────
+🎯 YANG BISA ADMIN LAKUKAN:
+─────────────────────────────────────────────────────────────
+
+  ✓ Tambah menu baru
+  ✓ Edit nama, deskripsi, harga menu
+  ✓ Hapus menu
+  ✓ Mark menu sebagai "Best Seller"
+  ✓ Edit nomor WhatsApp
+  ✓ Upload foto produk
+
+  Semua perubahan AUTO-UPDATE di halaman customer!
+
+─────────────────────────────────────────────────────────────
+📚 DOKUMENTASI:
+─────────────────────────────────────────────────────────────
+
+  QUICK_START.md      - Guide cepat (baca ini dulu!)
+  SETUP_GUIDE.md      - Guide detail + troubleshooting
+  README_SUPABASE.md  - Full documentation
+  CHECKLIST.md        - Verification checklist
+  SUPABASE_SETUP.sql  - SQL queries
+
+─────────────────────────────────────────────────────────────
+⚠️  PENTING:
+─────────────────────────────────────────────────────────────
+
+  ⚠️  Jangan push .env.local ke Git!
+      (File ini berisi credentials rahasia)
+
+─────────────────────────────────────────────────────────────
+✨ FITUR READY:
+─────────────────────────────────────────────────────────────
+
+  CUSTOMER:
+    • Lihat menu dengan foto
+    • Filter kategori
+    • Search menu
+    • Simpan favorit
+    • Pesan via WhatsApp
+    • Real-time updates ⚡
+
+  ADMIN:
+    • Login secure
+    • Manage menu (CRUD)
+    • Edit WhatsApp number
+    • Real-time dashboard
+    • File storage untuk foto
+
+─────────────────────────────────────────────────────────────
+🎉 SELESAI! READY TO USE!
+
+Ada pertanyaan atau error? Cek SETUP_GUIDE.md atau
+baca dokumentasi yang tersedia.
+
+Selamat menggunakan WebWarung + Supabase! 🚀
+
+╚══════════════════════════════════════════════════════════════╝

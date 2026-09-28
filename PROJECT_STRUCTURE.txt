@@ -1,0 +1,202 @@
+📁 WEBWARUNG PROJECT STRUCTURE
+═══════════════════════════════════════════════════════════════
+
+WebWarung/
+├── 📄 START_HERE.txt              ← BACA INI DULU! ⭐
+├── 📄 QUICK_START.md               ← Setup cepat (5 menit)
+├── 📄 SETUP_GUIDE.md               ← Guide detail + troubleshooting
+├── 📄 README_SUPABASE.md           ← Full documentation
+├── 📄 CHECKLIST.md                 ← Verification checklist
+├── 📄 SUPABASE_SETUP.sql           ← SQL queries (copy-paste)
+├── 📄 PROJECT_STRUCTURE.txt        ← File ini
+│
+├── 📄 package.json                 ← Dependencies
+├── 📄 package-lock.json
+├── 📄 .env.local                   ← ⚠️  CREDENTIALS (JANGAN COMMIT!)
+├── 📄 .gitignore                   ← Already includes *.local
+├── 📄 vite.config.ts               ← Vite configuration
+├── 📄 tsconfig.json                ← TypeScript configuration
+├── 📄 tsconfig.app.json
+├── 📄 tsconfig.node.json
+├── 📄 eslint.config.js             ← Linter config
+├── 📄 index.html                   ← Entry point HTML
+├── 📄 README.md                    ← Original README
+│
+├── 📂 src/
+│   ├── 📄 main.tsx                 ← React entry
+│   ├── 📄 App.tsx                  ← Main component (UPDATED ⭐)
+│   ├── 📄 App.css                  ← Styling
+│   ├── 📄 index.css                ← Global styles
+│   │
+│   ├── 📂 lib/                     ← Utilities & API
+│   │   ├── 📄 supabase.ts          ← Supabase client setup (NEW ⭐)
+│   │   └── 📄 api.ts               ← API helper functions (NEW ⭐)
+│   │
+│   └── 📂 assets/                  ← Static assets
+│       └── (images, etc)
+│
+├── 📂 public/                       ← Public assets
+│   └── images/
+│       ├── hero-warung.jpg
+│       ├── ayam-bakar.jpg
+│       └── soto.jpg
+│
+├── 📂 dist/                        ← Build output (npm run build)
+│   └── (compiled files)
+│
+└── 📂 node_modules/               ← Dependencies (git ignored)
+
+═══════════════════════════════════════════════════════════════
+
+📋 KEY FILES UPDATED:
+───────────────────────────────────────────────────────────────
+
+✅ src/App.tsx
+   • Import Supabase client
+   • Setup real-time subscriptions
+   • Add admin authentication (email/password)
+   • Fetch dishes from database
+   • Save changes to database
+   • Edit WhatsApp number in settings
+   • Real-time sync for all clients
+
+✅ .env.local (NEW)
+   • VITE_SUPABASE_URL
+   • VITE_SUPABASE_ANON_KEY
+   ⚠️  Not committed to Git (in .gitignore)
+
+✅ src/lib/supabase.ts (NEW)
+   • Supabase client initialization
+   • Type definitions
+   • Database types
+
+✅ src/lib/api.ts (NEW)
+   • Database query functions
+   • Authentication helpers
+   • File upload functions
+
+✅ package.json
+   • Added: @supabase/supabase-js
+
+═══════════════════════════════════════════════════════════════
+
+🗄️  DATABASE SCHEMA:
+───────────────────────────────────────────────────────────────
+
+Table: dishes
+  • id (UUID, Primary Key)
+  • name (Text) - Menu name
+  • description (Text)
+  • price (Integer) - In Rupiah
+  • category (Text)
+  • image_url (Text) - Photo URL
+  • is_bestseller (Boolean)
+  • is_available (Boolean)
+  • created_at (Timestamp)
+  • updated_at (Timestamp)
+
+Table: settings
+  • id (Text, Primary Key = '1')
+  • whatsapp_number (Text)
+  • updated_at (Timestamp)
+
+Storage: dishes bucket
+  • Public images storage
+  • For product photos
+
+═══════════════════════════════════════════════════════════════
+
+🔧 AVAILABLE COMMANDS:
+───────────────────────────────────────────────────────────────
+
+npm install          - Install dependencies
+npm run dev          - Start dev server (http://localhost:5173)
+npm run build        - Build for production
+npm run preview      - Preview production build
+npm run lint         - Check code quality
+
+═══════════════════════════════════════════════════════════════
+
+✨ FEATURES IMPLEMENTED:
+───────────────────────────────────────────────────────────────
+
+CUSTOMER FEATURES:
+  ✓ View menu items with descriptions
+  ✓ Filter by category
+  ✓ Search functionality
+  ✓ Save favorite items
+  ✓ Order via WhatsApp
+  ✓ Real-time updates (auto-refresh)
+
+ADMIN FEATURES:
+  ✓ Secure login (email/password)
+  ✓ Add new menu items
+  ✓ Edit menu items
+  ✓ Delete menu items
+  ✓ Mark as best seller
+  ✓ Edit WhatsApp number
+  ✓ Real-time dashboard
+
+BACKEND:
+  ✓ PostgreSQL database (Supabase)
+  ✓ Real-time API (WebSocket)
+  ✓ Authentication system
+  ✓ File storage (images)
+  ✓ Row Level Security (RLS)
+
+═══════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION FILES:
+───────────────────────────────────────────────────────────────
+
+START_HERE.txt
+  └─ Quick overview & setup steps (BACA INI DULU!)
+
+QUICK_START.md
+  └─ Step-by-step setup guide (5 minutes)
+
+SETUP_GUIDE.md
+  └─ Detailed guide + troubleshooting
+
+README_SUPABASE.md
+  └─ Full documentation & architecture
+
+CHECKLIST.md
+  └─ Verification checklist before testing
+
+SUPABASE_SETUP.sql
+  └─ SQL queries for database setup (copy-paste)
+
+PROJECT_STRUCTURE.txt
+  └─ File structure explanation (this file)
+
+═══════════════════════════════════════════════════════════════
+
+🚀 NEXT STEPS:
+───────────────────────────────────────────────────────────────
+
+1. Read: START_HERE.txt
+2. Follow: 5 setup steps in Supabase Dashboard
+3. Run: npm run dev
+4. Test: Admin panel login
+5. Deploy: To production (Vercel, Netlify, etc)
+
+═══════════════════════════════════════════════════════════════
+
+⚠️  SECURITY REMINDERS:
+───────────────────────────────────────────────────────────────
+
+✓ .env.local contains sensitive data (not committed)
+✓ Supabase credentials are in environment variables only
+✓ RLS policies protect database from unauthorized access
+✓ Only authenticated users can modify menu
+✓ Public users can only read data
+
+═══════════════════════════════════════════════════════════════
+
+Total files: 30+
+Core implementation: ~500 lines
+Setup time: ~15 minutes
+Ready for: Production!
+
+═══════════════════════════════════════════════════════════════
