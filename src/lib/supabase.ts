@@ -11,6 +11,7 @@ export type Dish = {
   description: string
   price: number
   category: string
+  time: string
   image_url: string
   is_bestseller: boolean
   is_available: boolean

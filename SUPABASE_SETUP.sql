@@ -12,12 +12,18 @@ create table if not exists public.dishes (
   description text not null,
   price integer not null,
   category text not null,
+  time text not null default 'Menu Pagi',
   image_url text,
   is_bestseller boolean default false,
   is_available boolean default true,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Tambah kolom time jika tabel sudah ada (migrasi untuk database lama)
+alter table public.dishes add column if not exists time text not null default 'Menu Pagi';
+-- Normalisasi kategori lama 'Menu Utama' menjadi 'Makanan'
+update public.dishes set category = 'Makanan' where category = 'Menu Utama';
 
 -- 3. CREATE SETTINGS TABLE
 create table if not exists public.settings (
@@ -68,11 +74,11 @@ insert into public.settings (id, whatsapp_number)
   on conflict (id) do nothing;
 
 -- 9. INSERT INITIAL DISHES DATA
-insert into public.dishes (name, description, price, category, image_url, is_bestseller, is_available) values
-  ('Nasi Ayam Bakar', 'Ayam bakar bumbu rahasia, nasi hangat, lalapan & sambal terasi.', 28000, 'Menu Utama', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', true, true),
-  ('Soto Ayam Kampung', 'Kuah bening gurih dengan suwiran ayam, soun, telur & koya.', 22000, 'Menu Utama', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', true, true),
-  ('Nasi Goreng Kampung', 'Nasi goreng wangi dengan telur mata sapi dan kerupuk.', 20000, 'Menu Utama', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', false, true),
-  ('Tempe Mendoan', 'Tempe tipis berbalut tepung berbumbu, digoreng hangat.', 12000, 'Camilan', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', false, true),
-  ('Es Teh Kampung', 'Teh melati harum, disajikan dingin dengan gula asli.', 6000, 'Minuman', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', false, true),
-  ('Es Jeruk Peras', 'Jeruk segar pilihan, manis dan menyegarkan.', 9000, 'Minuman', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', true, true)
+insert into public.dishes (name, description, price, category, time, image_url, is_bestseller, is_available) values
+  ('Nasi Ayam Bakar', 'Ayam bakar bumbu rahasia, nasi hangat, lalapan & sambal terasi.', 28000, 'Makanan', 'Menu Malam', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', true, true),
+  ('Soto Ayam Kampung', 'Kuah bening gurih dengan suwiran ayam, soun, telur & koya.', 22000, 'Makanan', 'Menu Pagi', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', true, true),
+  ('Nasi Goreng Kampung', 'Nasi goreng wangi dengan telur mata sapi dan kerupuk.', 20000, 'Makanan', 'Menu Pagi', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', false, true),
+  ('Tempe Mendoan', 'Tempe tipis berbalut tepung berbumbu, digoreng hangat.', 12000, 'Camilan', 'Menu Pagi', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', false, true),
+  ('Es Teh Kampung', 'Teh melati harum, disajikan dingin dengan gula asli.', 6000, 'Minuman', 'Menu Pagi', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', false, true),
+  ('Es Jeruk Peras', 'Jeruk segar pilihan, manis dan menyegarkan.', 9000, 'Minuman', 'Menu Malam', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', true, true)
 on conflict do nothing;

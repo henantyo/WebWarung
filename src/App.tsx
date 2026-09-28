@@ -1,11 +1,12 @@
 import { useMemo, useState, useEffect } from 'react'
-import { ArrowDown, ArrowLeft, ArrowRight, Clock3, Flame, Heart, Instagram, Lock, MapPin, Menu as MenuIcon, Minus, Phone, Plus, Search, Settings2, ShoppingBag, Sparkles, UtensilsCrossed, X } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, Clock3, Flame, Heart, Instagram, Lock, MapPin, Menu as MenuIcon, Minus, Phone, Plus, Search, Settings2, ShoppingBag, Sparkles, Upload, UtensilsCrossed, X } from 'lucide-react'
 import './App.css'
 import { supabase } from './lib/supabase'
 
-type Dish = { id: string; name: string; description: string; price: number; category: string; image: string; best: boolean; available: boolean }
+type Dish = { id: string; name: string; description: string; price: number; category: string; time: string; image: string; best: boolean; available: boolean }
 const initialDishes: Dish[] = []
-const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
+const times = ['Menu Pagi', 'Menu Malam'];
+const foodTypes = ['Makanan', 'Minuman', 'Camilan'];
 
   // Daftar menu default (fallback bila Supabase tidak tersedia)
   const defaultDishes = [
@@ -14,7 +15,8 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       name: 'Nasi Goreng',
       description: 'Nasi goreng spesial dengan telur mata sapi',
       price: 25000,
-      category: 'Menu Utama',
+      category: 'Makanan',
+      time: 'Menu Pagi',
       image: '/images/nasi-goreng.jpg',
       best: false,
       available: true,
@@ -24,7 +26,8 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       name: 'Ayam Lalapan',
       description: 'Ayam goreng renyah disajikan dengan lalapan segar',
       price: 30000,
-      category: 'Menu Utama',
+      category: 'Makanan',
+      time: 'Menu Malam',
       image: '/images/ayam-lalapan.jpg',
       best: false,
       available: true,
@@ -34,7 +37,8 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       name: 'Puyuh Lalapan',
       description: 'Puyuh panggang dengan sambal lalapan',
       price: 35000,
-      category: 'Menu Utama',
+      category: 'Makanan',
+      time: 'Menu Malam',
       image: '/images/puyuh-lalapan.jpg',
       best: false,
       available: true,
@@ -44,7 +48,8 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       name: 'Lele Lalapan',
       description: 'Lele goreng kriuk dengan lalapan segar',
       price: 28000,
-      category: 'Menu Utama',
+      category: 'Makanan',
+      time: 'Menu Malam',
       image: '/images/lele-lalapan.jpg',
       best: false,
       available: true,
@@ -54,7 +59,8 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       name: 'Mie Goreng',
       description: 'Mie goreng spesial dengan sayuran dan telur',
       price: 22000,
-      category: 'Menu Utama',
+      category: 'Makanan',
+      time: 'Menu Pagi',
       image: '/images/mie-goreng.jpg',
       best: false,
       available: true,
@@ -66,6 +72,7 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       description: 'Es teh manis segar',
       price: 8000,
       category: 'Minuman',
+      time: 'Menu Pagi',
       image: '/images/es-teh.jpg',
       best: false,
       available: true,
@@ -76,6 +83,7 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       description: 'Teh hangat dengan gula',
       price: 7000,
       category: 'Minuman',
+      time: 'Menu Pagi',
       image: '/images/teh-hangat.jpg',
       best: false,
       available: true,
@@ -86,6 +94,7 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       description: 'Minuman jus jeruk kemasan',
       price: 9000,
       category: 'Minuman',
+      time: 'Menu Malam',
       image: '/images/nutrisari-jeruk.jpg',
       best: false,
       available: true,
@@ -96,6 +105,7 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       description: 'Kopi hitam panas',
       price: 12000,
       category: 'Minuman',
+      time: 'Menu Pagi',
       image: '/images/kopi.jpg',
       best: false,
       available: true,
@@ -106,6 +116,7 @@ const categories = ['Semua', 'Menu Utama', 'Camilan', 'Minuman'];
       description: 'Minuman energi Joshua',
       price: 15000,
       category: 'Minuman',
+      time: 'Menu Malam',
       image: '/images/joshua.jpg',
       best: false,
       available: true,
@@ -115,7 +126,7 @@ const money = (value: number) => new Intl.NumberFormat('id-ID', { style: 'curren
 
 function App() {
   const [dishes, setDishes] = useState<Dish[]>([])
-  const [category, setCategory] = useState('Semua')
+  const [time, setTime] = useState('Menu Pagi')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Dish | null>(null)
   const [admin, setAdmin] = useState(false)
@@ -132,6 +143,8 @@ function App() {
   const [editingNumber, setEditingNumber] = useState(false)
   const [tempNumber, setTempNumber] = useState('6281234567890')
   const [uploading, setUploading] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState('')
 
   useEffect(() => {
     loadDishes()
@@ -166,7 +179,8 @@ function App() {
       name: d.name,
       description: d.description,
       price: d.price,
-      category: d.category,
+      category: d.category === 'Menu Utama' ? 'Makanan' : d.category,
+      time: d.time || 'Menu Pagi',
       image: d.image_url,
       best: d.is_bestseller,
       available: d.is_available
@@ -184,6 +198,7 @@ function App() {
           description: d.description,
           price: d.price,
           category: d.category,
+          time: d.time,
           image_url: d.image,
           is_bestseller: d.best,
           is_available: d.available,
@@ -242,10 +257,44 @@ function App() {
     }
   }
 
-  const filtered = useMemo(() => dishes.filter(d => d.available && (category === 'Semua' || d.category === category) && `${d.name} ${d.description}`.toLowerCase().includes(query.toLowerCase())), [dishes, category, query])
+  const grouped = useMemo(() => {
+    const matched = dishes.filter(d => d.available && d.time === time && `${d.name} ${d.description}`.toLowerCase().includes(query.toLowerCase()))
+    return foodTypes.map(type => ({ type, items: matched.filter(d => d.category === type) })).filter(g => g.items.length > 0)
+  }, [dishes, time, query])
+  const totalFiltered = useMemo(() => grouped.reduce((n, g) => n + g.items.length, 0), [grouped])
   const wa = (message: string) => `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
   const notify = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(''), 2800) }
   const toggleSaved = (id: string) => setSaved(current => current.includes(id) ? current.filter(x => x !== id) : [...current, id])
+
+  const openEditor = (dish: Dish) => {
+    setImageFile(null)
+    setImagePreview(dish && dish.id !== 'new' ? dish.image : '')
+    setEditing(dish)
+  }
+  const closeEditor = () => {
+    setImageFile(null)
+    setImagePreview('')
+    setEditing(null)
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { alert('File harus berupa gambar.'); return }
+    if (file.size > 4 * 1024 * 1024) { alert('Ukuran gambar maksimal 4MB.'); return }
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return null
+    const ext = imageFile.name.split('.').pop() || 'jpg'
+    const fileName = `dish-${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`
+    const { error } = await supabase.storage.from('dishes').upload(fileName, imageFile, { cacheControl: '3600', upsert: false })
+    if (error) throw error
+    const { data } = supabase.storage.from('dishes').getPublicUrl(fileName)
+    return data.publicUrl
+  }
 
   const handleAdminLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -275,9 +324,16 @@ function App() {
   const saveDish = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
-    
+    setUploading(true)
     try {
-      if (editing) {
+      // Upload foto baru kalau ada file dipilih
+      let imageUrl = String(form.get('image') || '')
+      if (imageFile) {
+        const uploadedUrl = await uploadImage()
+        if (uploadedUrl) imageUrl = uploadedUrl
+      }
+
+      if (editing && editing.id !== 'new') {
         const { error } = await supabase
           .from('dishes')
           .update({
@@ -285,7 +341,8 @@ function App() {
             description: String(form.get('description')),
             price: Number(form.get('price')),
             category: String(form.get('category')),
-            image_url: String(form.get('image')) || editing.image,
+            time: String(form.get('time')),
+            image_url: imageUrl || editing.image,
             is_bestseller: form.get('best') === 'on',
             updated_at: new Date().toISOString()
           })
@@ -301,7 +358,8 @@ function App() {
             description: String(form.get('description')),
             price: Number(form.get('price')),
             category: String(form.get('category')),
-            image_url: String(form.get('image')) || '',
+            time: String(form.get('time')),
+            image_url: imageUrl || '',
             is_bestseller: form.get('best') === 'on',
             is_available: true
           }])
@@ -311,10 +369,14 @@ function App() {
       }
       
       setEditing(null)
+      setImageFile(null)
+      setImagePreview('')
       loadDishes()
     } catch (err) {
       notify('Error: Gagal menyimpan menu')
       console.error(err)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -364,6 +426,8 @@ function App() {
     setAdminPassword('')
     setAdminLoginError('')
     setEditing(null)
+    setImageFile(null)
+    setImagePreview('')
     
     if (adminAuth) {
       await supabase.auth.signOut()
@@ -423,39 +487,46 @@ function App() {
           </div>
           <div className="menu-controls">
             <div className="category-list">
-              {categories.map(c => <button key={c} className={`category-pill ${category === c ? 'active' : ''}`} onClick={() => setCategory(c)}>{c}</button>)}
+              {times.map(t => <button key={t} className={`category-pill ${time === t ? 'active' : ''}`} onClick={() => setTime(t)}>{t}</button>)}
             </div>
             <label className="search-box"><Search size={17}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Cari menu..."/><kbd>⌘ K</kbd></label>
           </div>
-          {filtered.length ? (
-            <div className="menu-grid">
-              {filtered.map(dish => (
-                <article className="dish-card" key={dish.id}>
-                  <button className="dish-image" onClick={() => setSelected(dish)} aria-label={`Lihat ${dish.name}`}>
-                    <img src={dish.image} alt={dish.name}/>
-                    {dish.best && <span className="best-badge"><Flame size={12} fill="currentColor"/> BEST SELLER</span>}
-                    <span className="image-arrow"><ArrowRight size={16}/></span>
-                  </button>
-                  <div className="dish-info">
-                    <div className="dish-title-line">
-                      <div><span className="dish-category">{dish.category}</span><h3>{dish.name}</h3></div>
-                      <button className={`save-button ${saved.includes(dish.id) ? 'is-saved' : ''}`} aria-label="Simpan menu" onClick={() => toggleSaved(dish.id)}><Heart size={17} fill={saved.includes(dish.id) ? 'currentColor' : 'none'}/></button>
-                    </div>
-                    <p>{dish.description}</p>
-                    <div className="dish-bottom">
-                      <strong>{money(dish.price)}</strong>
-                      <button className="add-order" onClick={() => setSelected(dish)}>Pesan <Plus size={15}/></button>
-                    </div>
+          {totalFiltered ? (
+            <div className="menu-groups">
+              {grouped.map(group => (
+                <div className="menu-group" key={group.type}>
+                  <div className="menu-group-title"><span>{group.type}</span><i/></div>
+                  <div className="menu-grid">
+                    {group.items.map(dish => (
+                      <article className="dish-card" key={dish.id}>
+                        <button className="dish-image" onClick={() => setSelected(dish)} aria-label={`Lihat ${dish.name}`}>
+                          <img src={dish.image} alt={dish.name}/>
+                          {dish.best && <span className="best-badge"><Flame size={12} fill="currentColor"/> BEST SELLER</span>}
+                          <span className="image-arrow"><ArrowRight size={16}/></span>
+                        </button>
+                        <div className="dish-info">
+                          <div className="dish-title-line">
+                            <div><span className="dish-category">{dish.category}</span><h3>{dish.name}</h3></div>
+                            <button className={`save-button ${saved.includes(dish.id) ? 'is-saved' : ''}`} aria-label="Simpan menu" onClick={() => toggleSaved(dish.id)}><Heart size={17} fill={saved.includes(dish.id) ? 'currentColor' : 'none'}/></button>
+                          </div>
+                          <p>{dish.description}</p>
+                          <div className="dish-bottom">
+                            <strong>{money(dish.price)}</strong>
+                            <button className="add-order" onClick={() => setSelected(dish)}>Pesan <Plus size={15}/></button>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
                   </div>
-                </article>
+                </div>
               ))}
             </div>
           ) : (
-            <div className="empty-state"><Search size={25}/><b>Menu belum ditemukan</b><span>Coba kata kunci atau kategori yang berbeda.</span></div>
+            <div className="empty-state"><Search size={25}/><b>Menu belum ditemukan</b><span>Coba kata kunci lain atau ganti waktu menu.</span></div>
           )}
           <div className="menu-footnote">
-            <span><Sparkles size={15}/> Semua menu dimasak fresh setiap hari</span>
-            <button onClick={() => {setCategory('Semua');setQuery('')}}>Lihat semua menu <ArrowRight size={15}/></button>
+            <span><Sparkles size={15}/> Menu {time} dimasak fresh setiap hari</span>
+            <button onClick={() => {setTime('Menu Pagi');setQuery('')}}>Lihat menu pagi <ArrowRight size={15}/></button>
           </div>
         </section>
 
@@ -528,7 +599,7 @@ function App() {
             <button className="modal-close" onClick={() => setSelected(null)}><X size={20}/></button>
             <img src={selected.image} alt={selected.name}/>
             <div className="modal-body">
-              <span className="dish-category">{selected.category}{selected.best ? ' · BEST SELLER' : ''}</span>
+              <span className="dish-category">{selected.time} · {selected.category}{selected.best ? ' · BEST SELLER' : ''}</span>
               <h2>{selected.name}</h2>
               <p>{selected.description}</p>
               <div className="modal-price">{money(selected.price)}</div>
@@ -590,13 +661,26 @@ function App() {
                   <label>Deskripsi<textarea name="description" required defaultValue={editing.id === 'new' ? '' : editing.description} placeholder="Jelaskan menu secara singkat"/></label>
                   <div className="form-row">
                     <label>Harga (Rp)<input name="price" type="number" min="1000" required defaultValue={editing.id === 'new' ? '' : editing.price}/></label>
-                    <label>Kategori<select name="category" defaultValue={editing.id === 'new' ? 'Menu Utama' : editing.category}>{categories.slice(1).map(c => <option key={c}>{c}</option>)}</select></label>
+                    <label>Jenis<select name="category" defaultValue={editing.id === 'new' ? 'Makanan' : (editing.category === 'Menu Utama' ? 'Makanan' : editing.category)}>{foodTypes.map(c => <option key={c}>{c}</option>)}</select></label>
                   </div>
-                  <label>URL foto<input name="image" defaultValue={editing.id === 'new' ? '' : editing.image} placeholder="https://example.com/photo.jpg"/></label>
+                  <div className="form-row">
+                    <label>Waktu menu<select name="time" defaultValue={editing.id === 'new' ? 'Menu Pagi' : (editing.time || 'Menu Pagi')}>{times.map(t => <option key={t}>{t}</option>)}</select></label>
+                    <label>URL foto (opsional)<input name="image" defaultValue={editing.id === 'new' ? '' : editing.image} placeholder="https://... (atau upload di bawah)"/></label>
+                  </div>
+                  <label className="upload-field">Foto menu
+                    <div className="upload-area">
+                      <input type="file" name="photo" accept="image/*" onChange={handleImageChange} disabled={uploading}/>
+                      {(imagePreview || (editing.id !== 'new' && editing.image)) ? (
+                        <div className="upload-preview"><img src={imagePreview || editing.image} alt="Preview"/><button type="button" className="upload-clear" onClick={() => { setImageFile(null); setImagePreview(''); const inp = document.querySelector<HTMLInputElement>('input[name="photo"]'); if (inp) inp.value = '' }}><X size={14}/></button></div>
+                      ) : (
+                        <div className="upload-placeholder"><Upload size={22}/><span>Klik untuk pilih gambar</span><small>JPG/PNG · maks 4MB</small></div>
+                      )}
+                    </div>
+                  </label>
                   <label className="check-label"><input name="best" type="checkbox" defaultChecked={editing.id !== 'new' && editing.best}/> Tandai sebagai Best Seller</label>
                   <div className="form-actions">
-                    <button type="button" className="btn-outline" onClick={() => setEditing(null)}>Batal</button>
-                    <button className="btn-primary" type="submit" disabled={uploading}>Simpan menu <ArrowRight size={16}/></button>
+                    <button type="button" className="btn-outline" onClick={() => closeEditor()}>Batal</button>
+                    <button className="btn-primary" type="submit" disabled={uploading}>{uploading ? 'Mengunggah...' : 'Simpan menu'} {!uploading && <ArrowRight size={16}/>}</button>
                   </div>
                 </form>
               </div>
@@ -644,22 +728,23 @@ function App() {
 
                 <div className="admin-toolbar">
                   <div><h2>Daftar menu</h2><span>Kelola hidangan dan ketersediaan</span></div>
-                  <button className="btn-primary" onClick={() => setEditing({id:'new',name:'',description:'',price:0,category:'Menu Utama',image:'',best:false,available:true})}><Plus size={17}/> Tambah menu</button>
+                  <button className="btn-primary" onClick={() => openEditor({id:'new',name:'',description:'',price:0,category:'Makanan',time:'Menu Pagi',image:'',best:false,available:true})}><Plus size={17}/> Tambah menu</button>
                     <button className="btn-outline" onClick={seedDefaultDishes}>Seed default menu</button>
                 </div>
                 <div className="admin-table-wrap">
                   <table className="admin-table">
                     <thead>
-                      <tr><th>MENU</th><th>KATEGORI</th><th>HARGA</th><th>STATUS</th><th></th></tr>
+                      <tr><th>MENU</th><th>JENIS</th><th>WAKTU</th><th>HARGA</th><th>STATUS</th><th></th></tr>
                     </thead>
                     <tbody>
                       {dishes.map(d => (
                         <tr key={d.id}>
                           <td><div className="table-dish"><img src={d.image} alt=""/><b>{d.name}</b></div></td>
-                          <td>{d.category}</td>
+                          <td>{d.category === 'Menu Utama' ? 'Makanan' : d.category}</td>
+                          <td>{d.time || 'Menu Pagi'}</td>
                           <td>{money(d.price)}</td>
                           <td><span className="status-tag">● Tersedia</span>{d.best && <span className="table-bestseller">Best Seller</span>}</td>
-                          <td><div className="table-actions"><button onClick={() => setEditing(d)}>Edit</button><button className="delete-btn" onClick={() => removeDish(d.id)}>Hapus</button></div></td>
+                          <td><div className="table-actions"><button onClick={() => openEditor(d)}>Edit</button><button className="delete-btn" onClick={() => removeDish(d.id)}>Hapus</button></div></td>
                         </tr>
                       ))}
                     </tbody>
