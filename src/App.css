@@ -30,3 +30,28 @@
 .upload-preview img{width:100%;height:100%;object-fit:cover;display:block}
 .upload-clear{position:absolute;top:8px;right:8px;width:28px;height:28px;border:0;border-radius:50%;background:rgba(57,41,31,.7);color:#fff;display:grid;place-items:center;cursor:pointer;transition:background .2s}
 .upload-clear:hover{background:rgba(57,41,31,.9)}
+
+/* Enhanced dish modal */
+.dish-modal-media{position:relative;width:100%}
+.dish-modal-media>img{width:100%;height:260px;object-fit:cover;display:block}
+.modal-best{top:14px;left:14px}
+.modal-eyebrow{display:flex;align-items:center;gap:9px;font-size:10px;letter-spacing:2px;font-weight:700;color:var(--orange);text-transform:uppercase}
+.modal-description{font-size:14px;color:#6b5e54;line-height:1.85;margin:14px 0 18px}
+.modal-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.modal-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border:1px solid var(--line);border-radius:99px;font-size:11px;color:#64574d;background:#fffdf8}
+.modal-chip.chip-best{border-color:var(--orange);color:var(--orange);background:#fbeee6}
+.modal-price-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 0 20px;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);margin-bottom:18px}
+.modal-price-label{display:flex;flex-direction:column;gap:3px}
+.modal-price-label small{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.modal-price-label strong{font-size:24px;font-weight:800;color:var(--ink);font-family:'Playfair Display',serif}
+.modal-save{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid var(--line);border-radius:99px;background:#fffdf8;color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.modal-save:hover{border-color:var(--orange);color:var(--orange)}
+.modal-save.is-saved{border-color:var(--orange);color:var(--orange);background:#fbeee6}
+.modal-foot-note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:12px;text-align:center}
+.modal-order{justify-content:center}
+@media(max-width:680px){
+  .dish-modal-media>img{height:200px}
+  .modal-description{font-size:13px}
+  .modal-price-label strong{font-size:20px}
+  .modal-chip{font-size:10px;padding:6px 10px}
+}

@@ -456,7 +456,7 @@ function App() {
             <h1>Rasa rumah,<br/><em>selalu dirindukan.</em></h1>
             <p>Masakan rumahan enak & terjangkau, dimasak hangat setiap hari dengan resep keluarga.</p>
             <div className="hero-meta">
-              <span><MapPin size={16}/> Jl. Melati No. 18, Yogyakarta</span>
+              <span><MapPin size={16}/> Jl. Kawi, Semen, Kec. Gandusari, Kabupaten Blitar, Jawa Timur 66187</span>
               <span><Clock3 size={16}/> Buka hari ini · 08.00–21.00</span>
             </div>
             <div className="hero-actions">
@@ -472,7 +472,7 @@ function App() {
           <div className="hero-visual">
             <img src="/images/hero-warung.jpg" alt="Hidangan rumahan Warung"/>
             <div className="image-stamp"><span>♡</span><div><b>Dimasak dengan hati</b><small>Resep keluarga Turun Temurun</small></div></div>
-            <div className="vertical-note">DAPUR RUMAHAN · YOGYAKARTA</div>
+            <div className="vertical-note">DAPUR RUMAHAN · BLITAR</div>
           </div>
         </section>
 
@@ -555,20 +555,20 @@ function App() {
             <p>Sepiring masakan rumahan hangat selalu punya tempat untukmu.</p>
             <div className="address-line">
               <span className="address-icon"><MapPin size={18}/></span>
-              <div><b>WMJ Store</b><span>Jl. Melati No. 18, Baciro, Gondokusuman,<br/>Kota Yogyakarta, DI Yogyakarta 55225</span></div>
+              <div><b>WMJ Store</b><span>Jl. Kawi<br/>Semen, Kec. Gandusari, Kabupaten Blitar, Jawa Timur 66187</span></div>
             </div>
             <div className="address-line">
               <span className="address-icon"><Clock3 size={18}/></span>
               <div><b>Jam operasional</b><span>Setiap hari, 08.00 – 21.00 WIB</span></div>
             </div>
-            <a className="btn-primary map-link" href="https://maps.google.com/?q=Jl.+Melati+No.+18,+Yogyakarta" target="_blank" rel="noreferrer"><MapPin size={16}/> Buka Google Maps <ArrowRight size={16}/></a>
+            <a className="btn-primary map-link" href="https://maps.app.goo.gl/5eKJupkPYSxpstVf8" target="_blank" rel="noreferrer"><MapPin size={16}/> Buka Google Maps <ArrowRight size={16}/></a>
           </div>
           <div className="map-card">
             <div className="map-pattern">
               <div className="map-road road-one"/><div className="map-road road-two"/><div className="map-road road-three"/>
               <div className="map-block block-one"/><div className="map-block block-two"/><div className="map-block block-three"/><div className="map-block block-four"/>
               <div className="map-pin"><MapPin size={22} fill="currentColor"/></div>
-              <div className="map-caption"><span className="map-caption-icon">🍲</span><div><b>Warung Bu Heni</b><small>Masakan rumahan · 5 menit dari sini</small></div><ArrowRight size={16}/></div>
+              <div className="map-caption"><span className="map-caption-icon">🍲</span><div><b>WMJ Store</b><small>Masakan rumahan · 5 menit dari sini</small></div><ArrowRight size={16}/></div>
               <span className="map-label label-a">BACIRO</span><span className="map-label label-b">JL. MELATI</span>
             </div>
             <span className="map-credit">PETA AREA WARUNG</span>
@@ -583,8 +583,8 @@ function App() {
       </main>
 
       <footer className="footer">
-        <a className="brand" href="#home"><span className="brand-mark"><UtensilsCrossed size={17}/></span><span>warung<span className="brand-light">bu Heni</span></span></a>
-        <span>© 2026 Warung Bu Heni <i>·</i> Digital Menu</span>
+        <a className="brand" href="#home"><span className="brand-mark"><UtensilsCrossed size={17}/></span><span>WMJ<span className="brand-light">Store</span></span></a>
+        <span>© 2026 WMJ Store <i>·</i> Digital Menu</span>
         <div className="footer-social">
           <a href="https://instagram.com" aria-label="Instagram"><Instagram size={17}/></a>
           <a href="tel:+6281234567890" aria-label="Telepon"><Phone size={16}/></a>
@@ -597,13 +597,39 @@ function App() {
         <div className="modal-backdrop" onClick={() => setSelected(null)}>
           <div className="dish-modal" onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setSelected(null)}><X size={20}/></button>
-            <img src={selected.image} alt={selected.name}/>
+            <div className="dish-modal-media">
+              <img src={selected.image} alt={selected.name}/>
+              {selected.best && <span className="best-badge modal-best"><Flame size={12} fill="currentColor"/> BEST SELLER</span>}
+            </div>
             <div className="modal-body">
-              <span className="dish-category">{selected.time} · {selected.category}{selected.best ? ' · BEST SELLER' : ''}</span>
+              <div className="modal-eyebrow"><span className="eyebrow-dot"/>{selected.time} · {selected.category}</div>
               <h2>{selected.name}</h2>
-              <p>{selected.description}</p>
-              <div className="modal-price">{money(selected.price)}</div>
-              <a className="btn-primary modal-order" href={wa(`Halo Bu Heni, saya ingin pesan ${selected.name} (${money(selected.price)}).`)} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan menu ini</a>
+              <p className="modal-description">{selected.description}</p>
+
+              <div className="modal-chips">
+                <span className="modal-chip"><UtensilsCrossed size={14}/> {selected.category}</span>
+                <span className="modal-chip"><Clock3 size={14}/> {selected.time}</span>
+                <span className="modal-chip"><Sparkles size={14}/> Dimasak fresh</span>
+                {selected.best && <span className="modal-chip chip-best"><Flame size={14} fill="currentColor"/> Best Seller</span>}
+              </div>
+
+              <div className="modal-price-row">
+                <div className="modal-price-label">
+                  <small>Harga</small>
+                  <strong>{money(selected.price)}</strong>
+                </div>
+                <button
+                  className={`save-button modal-save ${saved.includes(selected.id) ? 'is-saved' : ''}`}
+                  aria-label="Simpan menu"
+                  onClick={() => toggleSaved(selected.id)}
+                >
+                  <Heart size={18} fill={saved.includes(selected.id) ? 'currentColor' : 'none'}/>
+                  <span>{saved.includes(selected.id) ? 'Tersimpan' : 'Simpan'}</span>
+                </button>
+              </div>
+
+              <a className="btn-primary modal-order" href={wa(`Halo Bu Heni, saya ingin pesan ${selected.name} (${money(selected.price)}).`)} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan menu ini <ArrowRight size={16}/></a>
+              <p className="modal-foot-note">Pesanan diteruskan langsung ke WhatsApp Bu Heni. Menu dimasak hangat setelah pesanan diterima.</p>
             </div>
           </div>
         </div>
