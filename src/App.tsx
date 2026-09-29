@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
-import { ArrowDown, ArrowLeft, ArrowRight, Clock3, Flame, Heart, Instagram, Lock, MapPin, Menu as MenuIcon, Minus, Phone, Plus, Search, Settings2, ShoppingBag, Sparkles, Upload, UtensilsCrossed, X } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, Clock3, Flame, Instagram, Lock, MapPin, Menu as MenuIcon, Minus, Phone, Plus, Search, Settings2, ShoppingBag, Sparkles, Star, Upload, UtensilsCrossed, X } from 'lucide-react'
 import './App.css'
 import { supabase } from './lib/supabase'
 
@@ -124,6 +124,15 @@ const foodTypes = ['Makanan', 'Minuman', 'Camilan'];
   ];
 const money = (value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 
+// Rating statis (sementara belum tersimpan di database / Supabase)
+type Rating = { value: number; reviews: number }
+const staticRating = (id: string): Rating => {
+  let hash = 0
+  for (const char of String(id)) hash = (hash * 31 + char.charCodeAt(0)) % 99991
+  return { value: Number((4.4 + (hash % 7) / 10).toFixed(1)), reviews: 12 + (hash % 180) }
+}
+const ratingStars = (value: number) => Math.round(value)
+
 function App() {
   const [dishes, setDishes] = useState<Dish[]>([])
   const [time, setTime] = useState('Menu Pagi')
@@ -138,7 +147,6 @@ function App() {
   const [notice, setNotice] = useState('')
   const [mobileNav, setMobileNav] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
-  const [saved, setSaved] = useState<string[]>([])
   const [whatsappNumber, setWhatsappNumber] = useState('6281234567890')
   const [editingNumber, setEditingNumber] = useState(false)
   const [tempNumber, setTempNumber] = useState('6281234567890')
@@ -262,9 +270,9 @@ function App() {
     return foodTypes.map(type => ({ type, items: matched.filter(d => d.category === type) })).filter(g => g.items.length > 0)
   }, [dishes, time, query])
   const totalFiltered = useMemo(() => grouped.reduce((n, g) => n + g.items.length, 0), [grouped])
+  const selectedRating = selected ? staticRating(selected.id) : null
   const wa = (message: string) => `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
   const notify = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(''), 2800) }
-  const toggleSaved = (id: string) => setSaved(current => current.includes(id) ? current.filter(x => x !== id) : [...current, id])
 
   const openEditor = (dish: Dish) => {
     setImageFile(null)
@@ -507,7 +515,7 @@ function App() {
                         <div className="dish-info">
                           <div className="dish-title-line">
                             <div><span className="dish-category">{dish.category}</span><h3>{dish.name}</h3></div>
-                            <button className={`save-button ${saved.includes(dish.id) ? 'is-saved' : ''}`} aria-label="Simpan menu" onClick={() => toggleSaved(dish.id)}><Heart size={17} fill={saved.includes(dish.id) ? 'currentColor' : 'none'}/></button>
+                            <span className="rating-badge" title="Rating sementara (statis)"><Star size={13} strokeWidth={0} fill="currentColor"/><b>{staticRating(dish.id).value}</b></span>
                           </div>
                           <p>{dish.description}</p>
                           <div className="dish-bottom">
@@ -618,14 +626,15 @@ function App() {
                   <small>Harga</small>
                   <strong>{money(selected.price)}</strong>
                 </div>
-                <button
-                  className={`save-button modal-save ${saved.includes(selected.id) ? 'is-saved' : ''}`}
-                  aria-label="Simpan menu"
-                  onClick={() => toggleSaved(selected.id)}
-                >
-                  <Heart size={18} fill={saved.includes(selected.id) ? 'currentColor' : 'none'}/>
-                  <span>{saved.includes(selected.id) ? 'Tersimpan' : 'Simpan'}</span>
-                </button>
+                <div className="modal-rating" title="Rating sementara (statis)">
+                  <span className="rating-stars">
+                    {[1, 2, 3, 4, 5].map(step => (
+                      <Star key={step} size={15} strokeWidth={0} fill="currentColor" className={selectedRating && step <= ratingStars(selectedRating.value) ? 'is-on' : ''}/>
+                    ))}
+                  </span>
+                  <b>{selectedRating?.value}</b>
+                  <small>{selectedRating?.reviews} ulasan</small>
+                </div>
               </div>
 
               <a className="btn-primary modal-order" href={wa(`Halo Bu Heni, saya ingin pesan ${selected.name} (${money(selected.price)}).`)} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan menu ini <ArrowRight size={16}/></a>
