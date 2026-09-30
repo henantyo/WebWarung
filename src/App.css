@@ -108,8 +108,9 @@
 .cart-footer{padding:16px 24px 22px;border-top:1px solid var(--line);background:#fbf8f3;display:flex;flex-direction:column;gap:13px}
 .cart-note-field{display:flex;flex-direction:column;gap:6px;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;color:var(--muted)}
 .cart-note-field small{display:inline;font-size:9px;letter-spacing:.4px;text-transform:none;font-weight:500;color:#a89b8d}
-.cart-note-field textarea{border:1px solid var(--line);border-radius:4px;background:#fffdf9;padding:9px 11px;font-size:12px;color:var(--ink);resize:vertical;outline:none;font-family:inherit}
-.cart-note-field textarea:focus{border-color:var(--orange)}
+.cart-note-field textarea,.cart-note-field input{border:1px solid var(--line);border-radius:4px;background:#fffdf9;padding:9px 11px;font-size:12px;color:var(--ink);outline:none;font-family:inherit}
+.cart-note-field textarea{resize:vertical}
+.cart-note-field textarea:focus,.cart-note-field input:focus{border-color:var(--orange)}
 .cart-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#766a60}
 .cart-summary b{font:600 20px 'Playfair Display',serif;color:var(--ink)}
 .cart-delivery-note{display:flex;align-items:center;gap:7px;margin:0;font-size:10px;color:#94887e;line-height:1.6}

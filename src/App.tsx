@@ -161,6 +161,7 @@ function App() {
   const [cart, setCart] = useState<CartLine[]>([])
   const [cartOpen, setCartOpen] = useState(false)
   const [orderNote, setOrderNote] = useState('')
+  const [orderName, setOrderName] = useState('')
   const [sharedLoc, setSharedLoc] = useState<{ url: string; lat: number; lng: number; acc: number } | null>(null)
   const [locating, setLocating] = useState(false)
   const [admin, setAdmin] = useState(false)
@@ -327,7 +328,7 @@ function App() {
   }
 
   const removeLine = (id: string) => setCart(prev => prev.filter(l => l.dish.id !== id))
-  const clearCart = () => { setCart([]); setOrderNote(''); notify('Keranjang dikosongkan.') }
+  const clearCart = () => { setCart([]); setOrderNote(''); setOrderName(''); notify('Keranjang dikosongkan.') }
   const openDish = (dish: Dish) => { setModalQty(1); setSelected(dish) }
 
   // Share lokasi pembeli (GPS browser) → dijadikan pin Google Maps untuk pesanan
@@ -360,11 +361,12 @@ function App() {
     const detail = groupedCart
       .map(g => `${g.type}\n${g.lines.map(l => `- ${l.qty}x ${l.dish.name} = ${money(l.qty * l.dish.price)}`).join('\n')}`)
       .join('\n\n')
+    const buyer = orderName.trim() ? `saya ${orderName.trim()}` : 'saya'
     const note = orderNote.trim() ? `\n\nCatatan / alamat pengantaran:\n${orderNote.trim()}` : ''
     const loc = sharedLoc
       ? `\n\nShare lokasi pembeli (titik GPS):\n${sharedLoc.url} (akurasi ±${sharedLoc.acc} m, ${sharedLoc.lat}, ${sharedLoc.lng})`
       : ''
-    return `Halo Bu Heni, saya mau pesan:\n\n${detail}\n\nTotal: ${money(cartTotal)} (${cartCount} item)${note}${loc}\n\nPengantaran maksimal jarak 2 km dari lokasi warung, ya Bu.`
+    return `Permisi Bu Heni, ${buyer} mau pesan:\n\n${detail}\n\nTotal: ${money(cartTotal)} (${cartCount} item)${note}${loc}`
   }
 
   const openEditor = (dish: Dish) => {
@@ -546,7 +548,7 @@ function App() {
             <a href="#cerita" onClick={() => setMobileNav(false)}>Tentang</a>
             <a href="#lokasi" onClick={() => setMobileNav(false)}>Lokasi</a>
             <button className="nav-cart" onClick={() => { setMobileNav(false); setCartOpen(true) }}><ShoppingBag size={15}/> Keranjang{cartCount > 0 && <span className="cart-badge">{cartCount}</span>}</button>
-            <a className="nav-contact" href={wa('Halo Bu Heni, saya ingin bertanya.')} target="_blank" rel="noreferrer"><Phone size={15}/> Hubungi kami</a>
+            <a className="nav-contact" href={wa('Permisi Bu Heni, saya ingin bertanya.')} target="_blank" rel="noreferrer"><Phone size={15}/> Hubungi kami</a>
           </div>
         </div>
       </nav>
@@ -563,7 +565,7 @@ function App() {
               <span><Clock3 size={16}/> Jam buka · {hoursLine} WIB</span>
             </div>
             <div className="hero-actions">
-              <a className="btn-primary" href={wa('Halo Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer"><ShoppingBag size={17}/> Pesan via WhatsApp <ArrowRight size={16}/></a>
+              <a className="btn-primary" href={wa('Permisi Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer"><ShoppingBag size={17}/> Pesan via WhatsApp <ArrowRight size={16}/></a>
               <a className="btn-outline" href="#lokasi">Lihat lokasi <ArrowDown size={15}/></a>
             </div>
             <div className="hero-note">
@@ -690,7 +692,7 @@ function App() {
         <section className="cta-strip">
           <div className="cta-sun">☀</div>
           <div><h2>Lagi lapar? <em>Bu Heni, siap masak.</em></h2><p>Pesan dulu, nanti kami siapkan hangat-hangat.</p></div>
-          <a href={wa('Halo Bu Heni, saya ingin memesan makanan.')} target="_blank" rel="noreferrer" className="cta-button">Pesan via WhatsApp <ArrowRight size={16}/></a>
+          <a href={wa('Permisi Bu Heni, saya ingin memesan makanan.')} target="_blank" rel="noreferrer" className="cta-button">Pesan via WhatsApp <ArrowRight size={16}/></a>
         </section>
       </main>
 
@@ -703,7 +705,7 @@ function App() {
           <button onClick={() => setAdmin(true)} title="Kelola menu"><Settings2 size={17}/></button>
         </div>
       </footer>
-      <a className="floating-wa" href={wa('Halo Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer" aria-label="Chat WhatsApp"><span className="wa-pulse"/><WhatsAppMark/></a>
+      <a className="floating-wa" href={wa('Permisi Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer" aria-label="Chat WhatsApp"><span className="wa-pulse"/><WhatsAppMark/></a>
 
       <button className="cart-fab" onClick={() => setCartOpen(true)} aria-label="Buka keranjang belanja">
         <ShoppingBag size={21}/>
@@ -759,6 +761,10 @@ function App() {
 
             <footer className="cart-footer">
               <label className="cart-note-field">
+                Nama pemesan <small>(wajib · biar jelas)</small>
+                <input value={orderName} onChange={e => setOrderName(e.target.value)} placeholder="Contoh: Budi" maxLength={50} autoComplete="name" />
+              </label>
+              <label className="cart-note-field">
                 Catatan & alamat pengantaran <small>(opsional · ancer-ancer)</small>
                 <textarea value={orderNote} onChange={e => setOrderNote(e.target.value)} rows={2} placeholder="Contoh: Jl. Melati No. 12, gang sebelah warung, tanpa pedas"/>
               </label>
@@ -790,10 +796,12 @@ function App() {
               <p className="cart-delivery-note"><MapPin size={14}/> Pengantaran maksimal jarak 2 km dari lokasi warung.</p>
               <div className="cart-actions">
                 <button type="button" className="btn-outline" onClick={clearCart} disabled={!cart.length}>Kosongkan</button>
-                {cart.length ? (
-                  <a className="btn-primary" href={wa(orderMessage())} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan via WhatsApp</a>
-                ) : (
+                {!cart.length ? (
                   <button type="button" className="btn-primary" disabled>Keranjang kosong</button>
+                ) : !orderName.trim() ? (
+                  <button type="button" className="btn-primary" disabled title="Isi nama dulu">Isi nama dulu</button>
+                ) : (
+                  <a className="btn-primary" href={wa(orderMessage())} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan via WhatsApp</a>
                 )}
               </div>
             </footer>
@@ -853,7 +861,7 @@ function App() {
               <button className="btn-primary modal-order" onClick={() => { addToCart(selected, modalQty); setSelected(null); setCartOpen(true) }}>
                 <ShoppingBag size={17}/> Tambah ke keranjang <ArrowRight size={16}/>
               </button>
-              <a className="modal-wa-link" href={wa(`Halo Bu Heni, saya ingin pesan ${modalQty}x ${selected.name} (${money(selected.price * modalQty)}).`)} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan langsung via WhatsApp</a>
+              <a className="modal-wa-link" href={wa(`Permisi Bu Heni, ${orderName.trim() ? `saya ${orderName.trim()} ` : 'saya '}ingin pesan ${modalQty}x ${selected.name} (${money(selected.price * modalQty)}).`)} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan langsung via WhatsApp</a>
               <p className="modal-foot-note">Pesanan diteruskan langsung ke WhatsApp Bu Heni. Menu dimasak hangat setelah pesanan diterima. <b>Pengantaran maksimal dalam jarak 2 km dari lokasi warung.</b></p>
             </div>
           </div>
@@ -868,7 +876,7 @@ function App() {
             <h2>Rumah kecil untuk rasa yang besar.</h2>
             <p>Sejak 2012, WMJ Store menyajikan masakan rumahan khas Jawa dengan resep keluarga. Kami memilih bahan segar dari pasar setiap pagi dan memasak dalam porsi kecil agar selalu hangat saat sampai di meja.</p>
             <div className="about-hours"><Clock3 size={18}/><span><b>Jam buka - tutup</b><br/>{hoursLine} WIB</span></div>
-            <a className="btn-primary" href={wa('Halo Bu Heni!')} target="_blank" rel="noreferrer">Sapa Bu Heni <ArrowRight size={16}/></a>
+            <a className="btn-primary" href={wa('Permisi Bu Heni!')} target="_blank" rel="noreferrer">Sapa Bu Heni <ArrowRight size={16}/></a>
           </div>
         </div>
       )}
