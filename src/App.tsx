@@ -4,9 +4,28 @@ import './App.css'
 import { supabase } from './lib/supabase'
 
 type Dish = { id: string; name: string; description: string; price: number; category: string; time: string; image: string; best: boolean; available: boolean }
+type CartLine = { dish: Dish; qty: number }
 const initialDishes: Dish[] = []
 const times = ['Menu Pagi', 'Menu Malam'];
 const foodTypes = ['Makanan', 'Minuman', 'Camilan'];
+
+// Jam buka - tutup per sesi (pagi & malam beda jamnya)
+const HOURS = [
+  { label: 'Pagi', open: '07.30', close: '13.30' },
+  { label: 'Malam', open: '18.00', close: '22.00' },
+]
+const hoursLine = HOURS.map(h => `Sesi ${h.label.toLowerCase()} ${h.open}–${h.close}`).join(' · ')
+const toMinutes = (t: string) => { const [h, m] = t.split('.').map(Number); return h * 60 + m }
+const openStatus = () => {
+  const now = new Date()
+  const mins = now.getHours() * 60 + now.getMinutes()
+  const live = HOURS.find(h => mins >= toMinutes(h.open) && mins < toMinutes(h.close))
+  if (live) return { open: true, text: `Buka sekarang · sesi ${live.label.toLowerCase()} ${live.open}–${live.close}` }
+  const next = HOURS.find(h => mins < toMinutes(h.open))
+  return next
+    ? { open: false, text: `Tutup · buka lagi ${next.open} (sesi ${next.label.toLowerCase()})` }
+    : { open: false, text: `Tutup · buka lagi besok ${HOURS[0].open} (sesi pagi)` }
+}
 
   // Daftar menu default (fallback bila Supabase tidak tersedia)
   const defaultDishes = [
@@ -138,6 +157,12 @@ function App() {
   const [time, setTime] = useState('Menu Pagi')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Dish | null>(null)
+  const [modalQty, setModalQty] = useState(1)
+  const [cart, setCart] = useState<CartLine[]>([])
+  const [cartOpen, setCartOpen] = useState(false)
+  const [orderNote, setOrderNote] = useState('')
+  const [sharedLoc, setSharedLoc] = useState<{ url: string; lat: number; lng: number; acc: number } | null>(null)
+  const [locating, setLocating] = useState(false)
   const [admin, setAdmin] = useState(false)
   const [adminAuth, setAdminAuth] = useState(false)
   const [adminEmail, setAdminEmail] = useState('')
@@ -271,8 +296,76 @@ function App() {
   }, [dishes, time, query])
   const totalFiltered = useMemo(() => grouped.reduce((n, g) => n + g.items.length, 0), [grouped])
   const selectedRating = selected ? staticRating(selected.id) : null
+  const status = openStatus()
   const wa = (message: string) => `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
   const notify = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(''), 2800) }
+
+  // ===== Keranjang belanja (bisa lebih dari satu item & lebih dari satu jenis) =====
+  const cartCount = useMemo(() => cart.reduce((n, line) => n + line.qty, 0), [cart])
+  const cartTotal = useMemo(() => cart.reduce((sum, line) => sum + line.qty * line.dish.price, 0), [cart])
+  const groupedCart = useMemo(
+    () => foodTypes.map(type => ({ type, lines: cart.filter(l => l.dish.category === type) })).filter(g => g.lines.length > 0),
+    [cart]
+  )
+  const qtyOf = (id: string) => cart.find(l => l.dish.id === id)?.qty || 0
+
+  const addToCart = (dish: Dish, qty = 1) => {
+    setCart(prev => {
+      const exists = prev.find(l => l.dish.id === dish.id)
+      if (exists) return prev.map(l => (l.dish.id === dish.id ? { ...l, qty: l.qty + qty } : l))
+      return [...prev, { dish, qty }]
+    })
+    notify(`${qty > 1 ? `${qty}× ` : ''}${dish.name} masuk keranjang`)
+  }
+
+  const updateQty = (id: string, qty: number) => {
+    if (qty <= 0) {
+      setCart(prev => prev.filter(l => l.dish.id !== id))
+      return
+    }
+    setCart(prev => prev.map(l => (l.dish.id === id ? { ...l, qty } : l)))
+  }
+
+  const removeLine = (id: string) => setCart(prev => prev.filter(l => l.dish.id !== id))
+  const clearCart = () => { setCart([]); setOrderNote(''); notify('Keranjang dikosongkan.') }
+  const openDish = (dish: Dish) => { setModalQty(1); setSelected(dish) }
+
+  // Share lokasi pembeli (GPS browser) → dijadikan pin Google Maps untuk pesanan
+  const shareLocation = () => {
+    if (!('geolocation' in navigator)) { notify('Perangkat ini tidak mendukung pembagian lokasi.'); return }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude, longitude, accuracy } = pos.coords
+        setSharedLoc({
+          lat: Number(latitude.toFixed(6)),
+          lng: Number(longitude.toFixed(6)),
+          acc: Math.round(accuracy),
+          url: `https://www.google.com/maps?q=${latitude.toFixed(6)},${longitude.toFixed(6)}`
+        })
+        setLocating(false)
+        notify('Lokasi Anda berhasil dilampirkan ke pesanan.')
+      },
+      err => {
+        setLocating(false)
+        notify(err.code === err.PERMISSION_DENIED
+          ? 'Izin lokasi ditolak. Izinkan akses lokasi di browser, lalu coba lagi.'
+          : 'Gagal mendapatkan lokasi. Coba lagi atau isi alamat manual.')
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  }
+
+  const orderMessage = () => {
+    const detail = groupedCart
+      .map(g => `${g.type}\n${g.lines.map(l => `- ${l.qty}x ${l.dish.name} = ${money(l.qty * l.dish.price)}`).join('\n')}`)
+      .join('\n\n')
+    const note = orderNote.trim() ? `\n\nCatatan / alamat pengantaran:\n${orderNote.trim()}` : ''
+    const loc = sharedLoc
+      ? `\n\nShare lokasi pembeli (titik GPS):\n${sharedLoc.url} (akurasi ±${sharedLoc.acc} m, ${sharedLoc.lat}, ${sharedLoc.lng})`
+      : ''
+    return `Halo Bu Heni, saya mau pesan:\n\n${detail}\n\nTotal: ${money(cartTotal)} (${cartCount} item)${note}${loc}\n\nPengantaran maksimal jarak 2 km dari lokasi warung, ya Bu.`
+  }
 
   const openEditor = (dish: Dish) => {
     setImageFile(null)
@@ -452,6 +545,7 @@ function App() {
             <a href="#menu" onClick={() => setMobileNav(false)}>Menu</a>
             <a href="#cerita" onClick={() => setMobileNav(false)}>Tentang</a>
             <a href="#lokasi" onClick={() => setMobileNav(false)}>Lokasi</a>
+            <button className="nav-cart" onClick={() => { setMobileNav(false); setCartOpen(true) }}><ShoppingBag size={15}/> Keranjang{cartCount > 0 && <span className="cart-badge">{cartCount}</span>}</button>
             <a className="nav-contact" href={wa('Halo Bu Heni, saya ingin bertanya.')} target="_blank" rel="noreferrer"><Phone size={15}/> Hubungi kami</a>
           </div>
         </div>
@@ -465,7 +559,8 @@ function App() {
             <p>Masakan rumahan enak & terjangkau, dimasak hangat setiap hari dengan resep keluarga.</p>
             <div className="hero-meta">
               <span><MapPin size={16}/> Jl. Kawi, Semen, Kec. Gandusari, Kabupaten Blitar, Jawa Timur 66187</span>
-              <span><Clock3 size={16}/> Buka hari ini · 08.00–21.00</span>
+              <span className={`open-status ${status.open ? 'is-open' : ''}`}><i/> {status.text}</span>
+              <span><Clock3 size={16}/> Jam buka · {hoursLine} WIB</span>
             </div>
             <div className="hero-actions">
               <a className="btn-primary" href={wa('Halo Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer"><ShoppingBag size={17}/> Pesan via WhatsApp <ArrowRight size={16}/></a>
@@ -507,7 +602,7 @@ function App() {
                   <div className="menu-grid">
                     {group.items.map(dish => (
                       <article className="dish-card" key={dish.id}>
-                        <button className="dish-image" onClick={() => setSelected(dish)} aria-label={`Lihat ${dish.name}`}>
+                        <button className="dish-image" onClick={() => openDish(dish)} aria-label={`Lihat ${dish.name}`}>
                           <img src={dish.image} alt={dish.name}/>
                           {dish.best && <span className="best-badge"><Flame size={12} fill="currentColor"/> BEST SELLER</span>}
                           <span className="image-arrow"><ArrowRight size={16}/></span>
@@ -520,7 +615,9 @@ function App() {
                           <p>{dish.description}</p>
                           <div className="dish-bottom">
                             <strong>{money(dish.price)}</strong>
-                            <button className="add-order" onClick={() => setSelected(dish)}>Pesan <Plus size={15}/></button>
+                            <button className="add-order" onClick={() => addToCart(dish)}>
+                              {qtyOf(dish.id) ? `Di keranjang (${qtyOf(dish.id)})` : 'Tambah'} <Plus size={15}/>
+                            </button>
                           </div>
                         </div>
                       </article>
@@ -567,7 +664,14 @@ function App() {
             </div>
             <div className="address-line">
               <span className="address-icon"><Clock3 size={18}/></span>
-              <div><b>Jam operasional</b><span>Setiap hari, 08.00 – 21.00 WIB</span></div>
+              <div>
+                <b>Jam buka - tutup</b>
+                {HOURS.map(h => <span key={h.label}>Sesi {h.label.toLowerCase()} · {h.open} – {h.close} WIB</span>)}
+              </div>
+            </div>
+            <div className="address-line">
+              <span className="address-icon"><MapPin size={18}/></span>
+              <div><b>Jarak pengantaran</b><span>Maksimal 2 km dari lokasi warung</span></div>
             </div>
             <a className="btn-primary map-link" href="https://maps.app.goo.gl/5eKJupkPYSxpstVf8" target="_blank" rel="noreferrer"><MapPin size={16}/> Buka Google Maps <ArrowRight size={16}/></a>
           </div>
@@ -601,6 +705,102 @@ function App() {
       </footer>
       <a className="floating-wa" href={wa('Halo Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer" aria-label="Chat WhatsApp"><span className="wa-pulse"/><WhatsAppMark/></a>
 
+      <button className="cart-fab" onClick={() => setCartOpen(true)} aria-label="Buka keranjang belanja">
+        <ShoppingBag size={21}/>
+        {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+      </button>
+
+      {cartOpen && (
+        <div className="cart-backdrop" onClick={() => setCartOpen(false)}>
+          <aside className="cart-drawer" onClick={e => e.stopPropagation()} aria-label="Keranjang belanja">
+            <header className="cart-header">
+              <div>
+                <div className="eyebrow"><span className="eyebrow-dot"/> PESANAN ANDA</div>
+                <h2>Keranjang</h2>
+              </div>
+              <button className="modal-close cart-close" onClick={() => setCartOpen(false)} aria-label="Tutup keranjang"><X size={19}/></button>
+            </header>
+
+            <div className="cart-body">
+              {cart.length ? (
+                <div className="cart-lines">
+                  {groupedCart.map(group => (
+                    <div className="cart-group" key={group.type}>
+                      <div className="cart-group-title"><span>{group.type}</span><i/></div>
+                      {group.lines.map(({ dish, qty }) => (
+                        <div className="cart-line" key={dish.id}>
+                          <img src={dish.image} alt={dish.name}/>
+                          <div className="cart-line-info">
+                            <b>{dish.name}</b>
+                            <small>{money(dish.price)}</small>
+                            <div className="qty-stepper qty-small">
+                              <button type="button" aria-label={`Kurangi ${dish.name}`} onClick={() => updateQty(dish.id, qty - 1)}><Minus size={13}/></button>
+                              <b>{qty}</b>
+                              <button type="button" aria-label={`Tambah ${dish.name}`} onClick={() => updateQty(dish.id, qty + 1)}><Plus size={13}/></button>
+                            </div>
+                          </div>
+                          <div className="cart-line-right">
+                            <strong>{money(dish.price * qty)}</strong>
+                            <button type="button" className="cart-remove" onClick={() => removeLine(dish.id)}><X size={12}/> Hapus</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="cart-empty">
+                  <ShoppingBag size={26}/>
+                  <b>Keranjang masih kosong</b>
+                  <span>Tambah menu makanan atau minuman favoritmu dulu, ya.</span>
+                </div>
+              )}
+            </div>
+
+            <footer className="cart-footer">
+              <label className="cart-note-field">
+                Catatan & alamat pengantaran <small>(opsional · ancer-ancer)</small>
+                <textarea value={orderNote} onChange={e => setOrderNote(e.target.value)} rows={2} placeholder="Contoh: Jl. Melati No. 12, gang sebelah warung, tanpa pedas"/>
+              </label>
+
+              <div className="cart-loc">
+                {!sharedLoc ? (
+                  <button type="button" className="loc-share-btn" onClick={shareLocation} disabled={locating}>
+                    <MapPin size={15}/> {locating ? 'Mendeteksi lokasi...' : 'Share lokasi saya (GPS)'}
+                  </button>
+                ) : (
+                  <div className="loc-shared">
+                    <span className="loc-icon"><MapPin size={15}/></span>
+                    <div className="loc-info">
+                      <b>Lokasi terlampir</b>
+                      <small>Titik GPS · akurasi ±{sharedLoc.acc} m</small>
+                    </div>
+                    <a href={sharedLoc.url} target="_blank" rel="noreferrer">Lihat peta</a>
+                    <button type="button" className="loc-remove" aria-label="Hapus lokasi" onClick={() => setSharedLoc(null)}><X size={13}/></button>
+                  </div>
+                )}
+                <p className="loc-hint">{sharedLoc
+                  ? 'Titik ini otomatis ikut terkirim ke pesanan WhatsApp.'
+                  : 'Pilih titik di HP → kirim, atau isi alamat di kolom atas.'}</p>
+              </div>
+              <div className="cart-summary">
+                <span>Subtotal · {cartCount} item</span>
+                <b>{money(cartTotal)}</b>
+              </div>
+              <p className="cart-delivery-note"><MapPin size={14}/> Pengantaran maksimal jarak 2 km dari lokasi warung.</p>
+              <div className="cart-actions">
+                <button type="button" className="btn-outline" onClick={clearCart} disabled={!cart.length}>Kosongkan</button>
+                {cart.length ? (
+                  <a className="btn-primary" href={wa(orderMessage())} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan via WhatsApp</a>
+                ) : (
+                  <button type="button" className="btn-primary" disabled>Keranjang kosong</button>
+                )}
+              </div>
+            </footer>
+          </aside>
+        </div>
+      )}
+
       {selected && (
         <div className="modal-backdrop" onClick={() => setSelected(null)}>
           <div className="dish-modal" onClick={e => e.stopPropagation()}>
@@ -619,6 +819,7 @@ function App() {
                 <span className="modal-chip"><Clock3 size={14}/> {selected.time}</span>
                 <span className="modal-chip"><Sparkles size={14}/> Dimasak fresh</span>
                 {selected.best && <span className="modal-chip chip-best"><Flame size={14} fill="currentColor"/> Best Seller</span>}
+                <span className="modal-chip chip-delivery"><MapPin size={14}/> Antar maks. 2 km</span>
               </div>
 
               <div className="modal-price-row">
@@ -637,8 +838,23 @@ function App() {
                 </div>
               </div>
 
-              <a className="btn-primary modal-order" href={wa(`Halo Bu Heni, saya ingin pesan ${selected.name} (${money(selected.price)}).`)} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan menu ini <ArrowRight size={16}/></a>
-              <p className="modal-foot-note">Pesanan diteruskan langsung ke WhatsApp Bu Heni. Menu dimasak hangat setelah pesanan diterima.</p>
+              <div className="qty-row">
+                <div className="qty-label">
+                  <small>Jumlah</small>
+                  <span>Subtotal {money(selected.price * modalQty)}</span>
+                </div>
+                <div className="qty-stepper">
+                  <button type="button" aria-label="Kurangi jumlah" onClick={() => setModalQty(q => Math.max(1, q - 1))}><Minus size={15}/></button>
+                  <b>{modalQty}</b>
+                  <button type="button" aria-label="Tambah jumlah" onClick={() => setModalQty(q => q + 1)}><Plus size={15}/></button>
+                </div>
+              </div>
+
+              <button className="btn-primary modal-order" onClick={() => { addToCart(selected, modalQty); setSelected(null); setCartOpen(true) }}>
+                <ShoppingBag size={17}/> Tambah ke keranjang <ArrowRight size={16}/>
+              </button>
+              <a className="modal-wa-link" href={wa(`Halo Bu Heni, saya ingin pesan ${modalQty}x ${selected.name} (${money(selected.price * modalQty)}).`)} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan langsung via WhatsApp</a>
+              <p className="modal-foot-note">Pesanan diteruskan langsung ke WhatsApp Bu Heni. Menu dimasak hangat setelah pesanan diterima. <b>Pengantaran maksimal dalam jarak 2 km dari lokasi warung.</b></p>
             </div>
           </div>
         </div>
@@ -651,7 +867,7 @@ function App() {
             <div className="eyebrow">CERITA WARUNG</div>
             <h2>Rumah kecil untuk rasa yang besar.</h2>
             <p>Sejak 2012, WMJ Store menyajikan masakan rumahan khas Jawa dengan resep keluarga. Kami memilih bahan segar dari pasar setiap pagi dan memasak dalam porsi kecil agar selalu hangat saat sampai di meja.</p>
-            <div className="about-hours"><Clock3 size={18}/><span><b>Jam operasional</b><br/>Setiap hari · 08.00–21.00 WIB</span></div>
+            <div className="about-hours"><Clock3 size={18}/><span><b>Jam buka - tutup</b><br/>{hoursLine} WIB</span></div>
             <a className="btn-primary" href={wa('Halo Bu Heni!')} target="_blank" rel="noreferrer">Sapa Bu Heni <ArrowRight size={16}/></a>
           </div>
         </div>
