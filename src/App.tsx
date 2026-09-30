@@ -331,32 +331,203 @@ function App() {
   const clearCart = () => { setCart([]); setOrderNote(''); setOrderName(''); notify('Keranjang dikosongkan.') }
   const openDish = (dish: Dish) => { setModalQty(1); setSelected(dish) }
 
+  // // Share lokasi pembeli (GPS browser) → dijadikan pin Google Maps untuk pesanan
+  // const shareLocation = () => {
+  //   if (!('geolocation' in navigator)) { notify('Perangkat ini tidak mendukung pembagian lokasi.'); return }
+  //   setLocating(true)
+  //   navigator.geolocation.getCurrentPosition(
+  //     pos => {
+  //       const { latitude, longitude, accuracy } = pos.coords
+  //       setSharedLoc({
+  //         lat: Number(latitude.toFixed(6)),
+  //         lng: Number(longitude.toFixed(6)),
+  //         acc: Math.round(accuracy),
+  //         url: `https://www.google.com/maps?q=${latitude.toFixed(6)},${longitude.toFixed(6)}`
+  //       })
+  //       setLocating(false)
+  //       notify('Lokasi Anda berhasil dilampirkan ke pesanan.')
+  //     },
+  //     err => {
+  //       setLocating(false)
+  //       notify(err.code === err.PERMISSION_DENIED
+  //         ? 'Izin lokasi ditolak. Izinkan akses lokasi di browser, lalu coba lagi.'
+  //         : 'Gagal mendapatkan lokasi. Coba lagi atau isi alamat manual.')
+  //     },
+  //     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  //   )
+  // }
+
   // Share lokasi pembeli (GPS browser) → dijadikan pin Google Maps untuk pesanan
-  const shareLocation = () => {
-    if (!('geolocation' in navigator)) { notify('Perangkat ini tidak mendukung pembagian lokasi.'); return }
-    setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const { latitude, longitude, accuracy } = pos.coords
-        setSharedLoc({
-          lat: Number(latitude.toFixed(6)),
-          lng: Number(longitude.toFixed(6)),
-          acc: Math.round(accuracy),
-          url: `https://www.google.com/maps?q=${latitude.toFixed(6)},${longitude.toFixed(6)}`
-        })
-        setLocating(false)
-        notify('Lokasi Anda berhasil dilampirkan ke pesanan.')
-      },
-      err => {
-        setLocating(false)
-        notify(err.code === err.PERMISSION_DENIED
-          ? 'Izin lokasi ditolak. Izinkan akses lokasi di browser, lalu coba lagi.'
-          : 'Gagal mendapatkan lokasi. Coba lagi atau isi alamat manual.')
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+const shareLocation = () => {
+  if (!('geolocation' in navigator)) {
+    notify('Perangkat ini tidak mendukung pembagian lokasi.')
+    return
+  }
+
+  setLocating(true)
+
+  let bestPosition: GeolocationPosition | null = null
+  let finished = false
+  let watchId: number | null = null
+  let timeoutId: number | null = null
+
+  const cleanup = () => {
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId)
+      watchId = null
+    }
+
+    if (timeoutId !== null) {
+      window.clearTimeout(timeoutId)
+      timeoutId = null
+    }
+  }
+
+  const finishSuccess = (position: GeolocationPosition) => {
+    if (finished) return
+    finished = true
+
+    cleanup()
+
+    const {
+      latitude,
+      longitude,
+      accuracy
+    } = position.coords
+
+    const roundedAccuracy = Math.round(accuracy)
+
+    console.log('Lokasi terbaik:', {
+      latitude,
+      longitude,
+      accuracy: roundedAccuracy
+    })
+
+    setSharedLoc({
+      lat: Number(latitude.toFixed(6)),
+      lng: Number(longitude.toFixed(6)),
+      acc: roundedAccuracy,
+      url: `https://www.google.com/maps?q=${latitude.toFixed(6)},${longitude.toFixed(6)}`
+    })
+
+    setLocating(false)
+
+    notify(
+      `Lokasi berhasil ditemukan · akurasi ±${roundedAccuracy} m`
     )
   }
 
+  const finishError = (message: string) => {
+    if (finished) return
+    finished = true
+
+    cleanup()
+    setLocating(false)
+    notify(message)
+  }
+
+  watchId = navigator.geolocation.watchPosition(
+    position => {
+      if (finished) return
+
+      const accuracy = position.coords.accuracy
+
+      console.log('GPS update:', {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: Math.round(accuracy)
+      })
+
+      // Simpan posisi dengan akurasi terbaik
+      if (
+        !bestPosition ||
+        accuracy < bestPosition.coords.accuracy
+      ) {
+        bestPosition = position
+      }
+
+      /*
+       * Kalau sudah mendapatkan akurasi <= 30 meter,
+       * anggap sudah cukup bagus dan langsung gunakan.
+       */
+      if (accuracy <= 30) {
+        finishSuccess(position)
+      }
+    },
+
+    error => {
+      console.error('Geolocation error:', error)
+
+      if (error.code === error.PERMISSION_DENIED) {
+        finishError(
+          'Izin lokasi ditolak. Izinkan akses lokasi di browser, lalu coba lagi.'
+        )
+        return
+      }
+
+      if (error.code === error.POSITION_UNAVAILABLE) {
+        finishError(
+          'GPS tidak tersedia. Pastikan GPS/lokasi HP aktif lalu coba lagi.'
+        )
+        return
+      }
+
+      if (error.code === error.TIMEOUT) {
+        finishError(
+          'GPS terlalu lama mendapatkan lokasi. Coba lagi di tempat terbuka.'
+        )
+        return
+      }
+
+      finishError(
+        'Gagal mendapatkan lokasi. Coba lagi atau isi alamat manual.'
+      )
+    },
+
+    {
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 0
+    }
+  )
+
+  /*
+   * Maksimal menunggu 15 detik.
+   *
+   * Kalau selama 15 detik sudah mendapatkan lokasi
+   * dengan akurasi <= 100 meter, gunakan lokasi terbaik.
+   *
+   * Kalau akurasi masih > 100 meter, jangan kirim lokasi
+   * karena kemungkinan terlalu meleset.
+   */
+  timeoutId = window.setTimeout(() => {
+    if (finished) return
+
+    if (bestPosition) {
+      const bestAccuracy = bestPosition.coords.accuracy
+
+      console.log('GPS selesai:', {
+        bestAccuracy: Math.round(bestAccuracy)
+      })
+
+      if (bestAccuracy <= 100) {
+        finishSuccess(bestPosition)
+      } else {
+        finishError(
+          `Lokasi belum cukup akurat (±${Math.round(
+            bestAccuracy
+          )} m). Aktifkan GPS dan coba lagi di tempat terbuka.`
+        )
+      }
+    } else {
+      finishError(
+        'Lokasi belum ditemukan. Pastikan GPS/lokasi HP aktif lalu coba lagi.'
+      )
+    }
+  }, 15000)
+}
+
+// diatas adalah fitur share lock yang sudah di perbarui
   const orderMessage = () => {
     const detail = groupedCart
       .map(g => `${g.type}\n${g.lines.map(l => `- ${l.qty}x ${l.dish.name} = ${money(l.qty * l.dish.price)}`).join('\n')}`)
