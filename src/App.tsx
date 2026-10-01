@@ -757,8 +757,8 @@ const shareLocation = () => {
                 <input value={orderName} onChange={e => setOrderName(e.target.value)} placeholder="Contoh: Budi" maxLength={50} autoComplete="name" />
               </label>
               <label className="cart-note-field">
-                Catatan & alamat pengantaran <small>(opsional · ancer-ancer)</small>
-                <textarea value={orderNote} onChange={e => setOrderNote(e.target.value)} rows={2} placeholder="Contoh: Jl. Melati No. 12, gang sebelah warung, tanpa pedas"/>
+                Catatan & alamat pengantaran <small>(wajib · ancer-ancer biar kurir tidak bingung)</small>
+                <textarea value={orderNote} onChange={e => setOrderNote(e.target.value)} rows={2} placeholder="Contoh: Jl. Melati No. 12, gang sebelah warung, cat rumah hijau"/>
               </label>
 
               <div className="cart-loc">
@@ -779,7 +779,7 @@ const shareLocation = () => {
                 )}
                 <p className="loc-hint">{sharedLoc
                   ? 'Titik ini otomatis ikut terkirim ke pesanan WhatsApp.'
-                  : 'Pilih titik di HP → kirim, atau isi alamat di kolom atas.'}</p>
+                  : 'Wajib · bagikan titik GPS agar kurir tidak bingung.'}</p>
               </div>
               <div className="cart-summary">
                 <span>Subtotal · {cartCount} item</span>
@@ -792,10 +792,17 @@ const shareLocation = () => {
                   <button type="button" className="btn-primary" disabled>Keranjang kosong</button>
                 ) : !orderName.trim() ? (
                   <button type="button" className="btn-primary" disabled title="Isi nama dulu">Isi nama dulu</button>
+                ) : !orderNote.trim() ? (
+                  <button type="button" className="btn-primary" disabled title="Isi ancer-ancer / alamat dulu">Isi ancer-ancer dulu</button>
+                ) : !sharedLoc ? (
+                  <button type="button" className="btn-primary" disabled title="Bagikan titik lokasi dulu">Share lokasi dulu</button>
                 ) : (
                   <a className="btn-primary" href={wa(orderMessage())} target="_blank" rel="noreferrer"><WhatsAppMark/> Pesan via WhatsApp</a>
                 )}
               </div>
+              {cart.length > 0 && (!orderName.trim() || !orderNote.trim() || !sharedLoc) && (
+                <p className="cart-validation-hint">Lengkapi nama, ancer-ancer, dan share lokasi agar kurir tidak bingung.</p>
+              )}
             </footer>
           </aside>
         </div>
