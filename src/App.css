@@ -156,3 +156,14 @@
 .open-status{font-weight:600;color:var(--ink)}
 .open-status i{width:7px;height:7px;border-radius:50%;background:#c9744e;flex:none;box-shadow:0 0 0 3px #c9744e22}
 .open-status.is-open i{background:#5aa06e;box-shadow:0 0 0 3px #5aa06e26}
+
+/* ===== Halaman Admin terpisah (/admin) — scroll normal mengikuti body ===== */
+.admin-page{min-height:100vh;background:#f8f6f1;display:flex;flex-direction:column}
+.admin-page .admin-panel{height:auto;min-height:100vh;overflow:visible}
+.admin-login-page{align-items:center;justify-content:center;padding:40px 20px}
+.admin-login-page .admin-login-panel{margin:auto}
+.admin-page .admin-header{position:sticky;top:0;background:#f8f6f1;z-index:5}
+/* Perbaikan overlay lama bila masih dipakai: pastikan bisa di-scroll */
+.admin-backdrop{overflow-y:auto}
+.admin-backdrop .admin-panel{height:auto;min-height:100vh;overflow:visible}
+.footer-social a{display:inline-flex;align-items:center;justify-content:center;color:inherit}
