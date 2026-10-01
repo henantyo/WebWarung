@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowDown, ArrowRight, Clock3, Flame, Instagram, MapPin, Menu as MenuIcon, Minus, Phone, Plus, Search, Settings2, ShoppingBag, Sparkles, Star, UtensilsCrossed, X } from 'lucide-react'
+import { ArrowDown, ArrowRight, Clock3, Flame, Home, Instagram, MapPin, Minus, Phone, Plus, Search, Settings2, ShoppingBag, Sparkles, Star, UtensilsCrossed, X } from 'lucide-react'
 import './App.css'
 import { supabase } from './lib/supabase'
 
@@ -166,7 +166,6 @@ function App() {
   const [sharedLoc, setSharedLoc] = useState<{ url: string; lat: number; lng: number; acc: number } | null>(null)
   const [locating, setLocating] = useState(false)
   const [notice, setNotice] = useState('')
-  const [mobileNav, setMobileNav] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [whatsappNumber, setWhatsappNumber] = useState('6281234567890')
 
@@ -533,15 +532,8 @@ const shareLocation = () => {
     <div className="app-shell">
       <nav className="topbar">
         <div className="nav-inner">
-          <a className="brand" href="#home" onClick={() => setMobileNav(false)}><span className="brand-mark"><UtensilsCrossed size={19}/></span><span>WMJ<span className="brand-light">Store</span></span></a>
-          <button className="mobile-toggle" aria-label="Buka navigasi" onClick={() => setMobileNav(!mobileNav)}><MenuIcon size={22}/></button>
-          <div className={`nav-links ${mobileNav ? 'show' : ''}`}>
-            <a href="#menu" onClick={() => setMobileNav(false)}>Menu</a>
-            <a href="#cerita" onClick={() => setMobileNav(false)}>Tentang</a>
-            <a href="#lokasi" onClick={() => setMobileNav(false)}>Lokasi</a>
-            <button className="nav-cart" onClick={() => { setMobileNav(false); setCartOpen(true) }}><ShoppingBag size={15}/> Keranjang{cartCount > 0 && <span className="cart-badge">{cartCount}</span>}</button>
-            <a className="nav-contact" href={wa('Permisi Bu Heni, saya ingin bertanya.')} target="_blank" rel="noreferrer"><Phone size={15}/> Hubungi kami</a>
-          </div>
+          <a className="brand" href="#home"><span className="brand-mark"><UtensilsCrossed size={19}/></span><span>WMJ<span className="brand-light">Store</span></span></a>
+          <a className="nav-contact" href={wa('Permisi Bu Heni, saya ingin bertanya.')} target="_blank" rel="noreferrer"><Phone size={15}/> Hubungi kami</a>
         </div>
       </nav>
 
@@ -697,12 +689,17 @@ const shareLocation = () => {
           <Link to="/admin" title="Kelola menu"><Settings2 size={17}/></Link>
         </div>
       </footer>
-      <a className="floating-wa" href={wa('Permisi Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer" aria-label="Chat WhatsApp"><span className="wa-pulse"/><WhatsAppMark/></a>
+      <nav className="bottom-nav" aria-label="Navigasi utama">
+        <a href="#home" className="bottom-nav-item"><Home size={20}/><span>Beranda</span></a>
+        <a href="#menu" className="bottom-nav-item"><UtensilsCrossed size={20}/><span>Menu</span></a>
+        <a href="#cerita" className="bottom-nav-item"><Sparkles size={20}/><span>Tentang</span></a>
+        <a href="#lokasi" className="bottom-nav-item"><MapPin size={20}/><span>Lokasi</span></a>
+        <button type="button" className="bottom-nav-item bottom-nav-cart" onClick={() => setCartOpen(true)} aria-label="Buka keranjang belanja">
+          <span className="bottom-nav-icon"><ShoppingBag size={20}/>{cartCount > 0 && <span className="cart-badge">{cartCount}</span>}</span><span>Keranjang</span>
+        </button>
+      </nav>
 
-      <button className="cart-fab" onClick={() => setCartOpen(true)} aria-label="Buka keranjang belanja">
-        <ShoppingBag size={21}/>
-        {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-      </button>
+      {/* <a className="floating-wa" href={wa('Permisi Bu Heni, saya mau pesan menu.')} target="_blank" rel="noreferrer" aria-label="Chat WhatsApp"><span className="wa-pulse"/><WhatsAppMark/></a> */}
 
       {cartOpen && (
         <div className="cart-backdrop" onClick={() => setCartOpen(false)}>
