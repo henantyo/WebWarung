@@ -6,7 +6,9 @@ import { supabase } from './lib/supabase'
 
 type Dish = { id: string; name: string; description: string; price: number; category: string; time: string; image: string; best: boolean; available: boolean }
 type CartLine = { dish: Dish; qty: number }
-const initialDishes: Dish[] = []
+// Foto fallback: hanya file yang benar-benar ada di public/images.
+// Ganti dengan foto asli bila sudah tersedia.
+const FALLBACK_IMG = '/images/soto.jpg'
 const times = ['Menu Pagi', 'Menu Malam'];
 const foodTypes = ['Makanan', 'Minuman', 'Camilan'];
 
@@ -37,7 +39,7 @@ const openStatus = () => {
       price: 25000,
       category: 'Makanan',
       time: 'Menu Pagi',
-      image: '/images/nasi-goreng.jpg',
+      image: '/images/soto.jpg',
       best: false,
       available: true,
     },
@@ -48,7 +50,7 @@ const openStatus = () => {
       price: 30000,
       category: 'Makanan',
       time: 'Menu Malam',
-      image: '/images/ayam-lalapan.jpg',
+      image: '/images/ayam-bakar.jpg',
       best: false,
       available: true,
     },
@@ -59,7 +61,7 @@ const openStatus = () => {
       price: 35000,
       category: 'Makanan',
       time: 'Menu Malam',
-      image: '/images/puyuh-lalapan.jpg',
+      image: '/images/ayam-bakar.jpg',
       best: false,
       available: true,
     },
@@ -70,7 +72,7 @@ const openStatus = () => {
       price: 28000,
       category: 'Makanan',
       time: 'Menu Malam',
-      image: '/images/lele-lalapan.jpg',
+      image: '/images/ayam-bakar.jpg',
       best: false,
       available: true,
     },
@@ -81,7 +83,7 @@ const openStatus = () => {
       price: 22000,
       category: 'Makanan',
       time: 'Menu Pagi',
-      image: '/images/mie-goreng.jpg',
+      image: '/images/soto.jpg',
       best: false,
       available: true,
     },
@@ -93,7 +95,7 @@ const openStatus = () => {
       price: 8000,
       category: 'Minuman',
       time: 'Menu Pagi',
-      image: '/images/es-teh.jpg',
+      image: '/images/soto.jpg',
       best: false,
       available: true,
     },
@@ -104,7 +106,7 @@ const openStatus = () => {
       price: 7000,
       category: 'Minuman',
       time: 'Menu Pagi',
-      image: '/images/teh-hangat.jpg',
+      image: '/images/soto.jpg',
       best: false,
       available: true,
     },
@@ -115,7 +117,7 @@ const openStatus = () => {
       price: 9000,
       category: 'Minuman',
       time: 'Menu Malam',
-      image: '/images/nutrisari-jeruk.jpg',
+      image: '/images/soto.jpg',
       best: false,
       available: true,
     },
@@ -126,7 +128,7 @@ const openStatus = () => {
       price: 12000,
       category: 'Minuman',
       time: 'Menu Pagi',
-      image: '/images/kopi.jpg',
+      image: '/images/soto.jpg',
       best: false,
       available: true,
     },
@@ -137,7 +139,7 @@ const openStatus = () => {
       price: 15000,
       category: 'Minuman',
       time: 'Menu Malam',
-      image: '/images/joshua.jpg',
+      image: '/images/soto.jpg',
       best: false,
       available: true,
     },
@@ -169,13 +171,6 @@ function App() {
   const [aboutOpen, setAboutOpen] = useState(false)
   const [whatsappNumber, setWhatsappNumber] = useState('6281234567890')
 
-  useEffect(() => {
-    loadDishes()
-    loadSettings()
-    const cleanup = setupRealtimeSubscription()
-    return cleanup
-  }, [])
-
   const loadDishes = async () => {
     const { data, error } = await supabase
       .from('dishes')
@@ -190,9 +185,10 @@ function App() {
       return
     }
     
-    // Jika tidak ada data atau tabel kosong, seed data default ke Supabase
+    // Tabel kosong: tampilkan fallback lokal saja.
+    // Pengisian data hanya lewat Panel Admin (tombol "Seed default menu")
+    // agar pengunjung anonim tidak berlomba-lomba insert baris ganda.
     if (!data || data.length === 0) {
-      await seedDefaultDishes();
       setDishes(defaultDishes)
       return
     }
@@ -212,29 +208,6 @@ function App() {
     setDishes(formattedDishes)
   }
 
-  // Insert default dishes ke Supabase bila tabel masih kosong
-  async function seedDefaultDishes() {
-    try {
-      const { error } = await supabase.from('dishes').insert(
-        defaultDishes.map(d => ({
-          name: d.name,
-          description: d.description,
-          price: d.price,
-          category: d.category,
-          time: d.time,
-          image_url: d.image,
-          is_bestseller: d.best,
-          is_available: d.available,
-        }))
-      );
-      if (error) throw error;
-      console.log('Default dishes seeded');
-      // Reload dishes after seeding
-      loadDishes();
-    } catch (e) {
-      console.error('Error seeding default dishes:', e);
-    }
-  }
 
   const loadSettings = async () => {
     const { data, error } = await supabase
@@ -278,6 +251,13 @@ function App() {
       return () => {}
     }
   }
+
+  useEffect(() => {
+    loadDishes()
+    loadSettings()
+    const cleanup = setupRealtimeSubscription()
+    return cleanup
+  }, [])
 
   const grouped = useMemo(() => {
     const matched = dishes.filter(d => d.available && d.time === time && `${d.name} ${d.description}`.toLowerCase().includes(query.toLowerCase()))
@@ -589,7 +569,7 @@ const shareLocation = () => {
                     {group.items.map(dish => (
                       <article className="dish-card" key={dish.id}>
                         <button className="dish-image" onClick={() => openDish(dish)} aria-label={`Lihat ${dish.name}`}>
-                          <img src={dish.image} alt={dish.name}/>
+                          <img src={dish.image} alt={dish.name} onError={e => { e.currentTarget.src = FALLBACK_IMG }}/>
                           {dish.best && <span className="best-badge"><Flame size={12} fill="currentColor"/> BEST SELLER</span>}
                           <span className="image-arrow"><ArrowRight size={16}/></span>
                         </button>
@@ -720,7 +700,7 @@ const shareLocation = () => {
                       <div className="cart-group-title"><span>{group.type}</span><i/></div>
                       {group.lines.map(({ dish, qty }) => (
                         <div className="cart-line" key={dish.id}>
-                          <img src={dish.image} alt={dish.name}/>
+                          <img src={dish.image} alt={dish.name} onError={e => { e.currentTarget.src = FALLBACK_IMG }}/>
                           <div className="cart-line-info">
                             <b>{dish.name}</b>
                             <small>{money(dish.price)}</small>
@@ -810,7 +790,7 @@ const shareLocation = () => {
           <div className="dish-modal" onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setSelected(null)}><X size={20}/></button>
             <div className="dish-modal-media">
-              <img src={selected.image} alt={selected.name}/>
+              <img src={selected.image} alt={selected.name} onError={e => { e.currentTarget.src = FALLBACK_IMG }}/>
               {selected.best && <span className="best-badge modal-best"><Flame size={12} fill="currentColor"/> BEST SELLER</span>}
             </div>
             <div className="modal-body">

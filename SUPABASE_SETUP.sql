@@ -68,6 +68,17 @@ create policy "allow_admin_upload_dishes" on storage.objects
     bucket_id = 'dishes' and auth.role() = 'authenticated'
   );
 
+-- Hapus / ganti gambar: izinkan admin update & delete (sebelumnya hanya select+insert)
+create policy "allow_admin_update_dishes" on storage.objects
+  for update using (
+    bucket_id = 'dishes' and auth.role() = 'authenticated'
+  );
+
+create policy "allow_admin_delete_dishes" on storage.objects
+  for delete using (
+    bucket_id = 'dishes' and auth.role() = 'authenticated'
+  );
+
 -- 8. INSERT INITIAL SETTINGS
 insert into public.settings (id, whatsapp_number) 
   values ('1', '6281234567890')
@@ -82,3 +93,30 @@ insert into public.dishes (name, description, price, category, time, image_url, 
   ('Es Teh Kampung', 'Teh melati harum, disajikan dingin dengan gula asli.', 6000, 'Minuman', 'Menu Pagi', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', false, true),
   ('Es Jeruk Peras', 'Jeruk segar pilihan, manis dan menyegarkan.', 9000, 'Minuman', 'Menu Malam', 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', true, true)
 on conflict do nothing;
+
+-- 10. OPSIONAL: batasi tulis hanya untuk email admin
+-- Ganti 'admin@warung.com' dengan email admin, lalu jalankan blok ini.
+-- Aplikasi juga sudah memeriksa VITE_ADMIN_EMAILS di sisi klien.
+/*
+drop policy if exists "allow_admin_modify_dishes" on public.dishes;
+create policy "allow_admin_modify_dishes" on public.dishes
+  for all using (
+    auth.role() = 'authenticated'
+    and lower(auth.jwt() ->> 'email') = lower('admin@warung.com')
+  )
+  with check (
+    auth.role() = 'authenticated'
+    and lower(auth.jwt() ->> 'email') = lower('admin@warung.com')
+  );
+
+drop policy if exists "allow_admin_modify_settings" on public.settings;
+create policy "allow_admin_modify_settings" on public.settings
+  for all using (
+    auth.role() = 'authenticated'
+    and lower(auth.jwt() ->> 'email') = lower('admin@warung.com')
+  )
+  with check (
+    auth.role() = 'authenticated'
+    and lower(auth.jwt() ->> 'email') = lower('admin@warung.com')
+  );
+*/

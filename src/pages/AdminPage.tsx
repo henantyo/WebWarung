@@ -7,19 +7,24 @@ import { supabase } from '../lib/supabase'
 type Dish = { id: string; name: string; description: string; price: number; category: string; time: string; image: string; best: boolean; available: boolean }
 const times = ['Menu Pagi', 'Menu Malam']
 const foodTypes = ['Makanan', 'Minuman', 'Camilan']
+const FALLBACK_IMG = '/images/soto.jpg'
+// Opsional: set VITE_ADMIN_EMAILS di .env.local agar hanya email itu yang dianggap admin.
+// Bila kosong, semua user terautentikasi diizinkan (perilaku lama).
+const ADMIN_EMAILS: string[] = ((import.meta.env.VITE_ADMIN_EMAILS as string | undefined) ?? '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+const isAdminEmail = (email: string) => ADMIN_EMAILS.length === 0 || ADMIN_EMAILS.includes(email.trim().toLowerCase())
 const money = (value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 
 const defaultDishes: Dish[] = [
-  { id: '1', name: 'Nasi Goreng', description: 'Nasi goreng spesial dengan telur mata sapi', price: 25000, category: 'Makanan', time: 'Menu Pagi', image: '/images/nasi-goreng.jpg', best: false, available: true },
-  { id: '2', name: 'Ayam Lalapan', description: 'Ayam goreng renyah disajikan dengan lalapan segar', price: 30000, category: 'Makanan', time: 'Menu Malam', image: '/images/ayam-lalapan.jpg', best: false, available: true },
-  { id: '3', name: 'Puyuh Lalapan', description: 'Puyuh panggang dengan sambal lalapan', price: 35000, category: 'Makanan', time: 'Menu Malam', image: '/images/puyuh-lalapan.jpg', best: false, available: true },
-  { id: '4', name: 'Lele Lalapan', description: 'Lele goreng kriuk dengan lalapan segar', price: 28000, category: 'Makanan', time: 'Menu Malam', image: '/images/lele-lalapan.jpg', best: false, available: true },
-  { id: '5', name: 'Mie Goreng', description: 'Mie goreng spesial dengan sayuran dan telur', price: 22000, category: 'Makanan', time: 'Menu Pagi', image: '/images/mie-goreng.jpg', best: false, available: true },
-  { id: '6', name: 'Es Teh', description: 'Es teh manis segar', price: 8000, category: 'Minuman', time: 'Menu Pagi', image: '/images/es-teh.jpg', best: false, available: true },
-  { id: '7', name: 'Teh Hangat', description: 'Teh hangat dengan gula', price: 7000, category: 'Minuman', time: 'Menu Pagi', image: '/images/teh-hangat.jpg', best: false, available: true },
-  { id: '8', name: 'Nutrisari Jeruk', description: 'Minuman jus jeruk kemasan', price: 9000, category: 'Minuman', time: 'Menu Malam', image: '/images/nutrisari-jeruk.jpg', best: false, available: true },
-  { id: '9', name: 'Kopi', description: 'Kopi hitam panas', price: 12000, category: 'Minuman', time: 'Menu Pagi', image: '/images/kopi.jpg', best: false, available: true },
-  { id: '10', name: 'Joshua', description: 'Minuman energi Joshua', price: 15000, category: 'Minuman', time: 'Menu Malam', image: '/images/joshua.jpg', best: false, available: true },
+  { id: '1', name: 'Nasi Goreng', description: 'Nasi goreng spesial dengan telur mata sapi', price: 25000, category: 'Makanan', time: 'Menu Pagi', image: '/images/soto.jpg', best: false, available: true },
+  { id: '2', name: 'Ayam Lalapan', description: 'Ayam goreng renyah disajikan dengan lalapan segar', price: 30000, category: 'Makanan', time: 'Menu Malam', image: '/images/ayam-bakar.jpg', best: false, available: true },
+  { id: '3', name: 'Puyuh Lalapan', description: 'Puyuh panggang dengan sambal lalapan', price: 35000, category: 'Makanan', time: 'Menu Malam', image: '/images/ayam-bakar.jpg', best: false, available: true },
+  { id: '4', name: 'Lele Lalapan', description: 'Lele goreng kriuk dengan lalapan segar', price: 28000, category: 'Makanan', time: 'Menu Malam', image: '/images/ayam-bakar.jpg', best: false, available: true },
+  { id: '5', name: 'Mie Goreng', description: 'Mie goreng spesial dengan sayuran dan telur', price: 22000, category: 'Makanan', time: 'Menu Pagi', image: '/images/soto.jpg', best: false, available: true },
+  { id: '6', name: 'Es Teh', description: 'Es teh manis segar', price: 8000, category: 'Minuman', time: 'Menu Pagi', image: '/images/soto.jpg', best: false, available: true },
+  { id: '7', name: 'Teh Hangat', description: 'Teh hangat dengan gula', price: 7000, category: 'Minuman', time: 'Menu Pagi', image: '/images/soto.jpg', best: false, available: true },
+  { id: '8', name: 'Nutrisari Jeruk', description: 'Minuman jus jeruk kemasan', price: 9000, category: 'Minuman', time: 'Menu Malam', image: '/images/soto.jpg', best: false, available: true },
+  { id: '9', name: 'Kopi', description: 'Kopi hitam panas', price: 12000, category: 'Minuman', time: 'Menu Pagi', image: '/images/soto.jpg', best: false, available: true },
+  { id: '10', name: 'Joshua', description: 'Minuman energi Joshua', price: 15000, category: 'Minuman', time: 'Menu Malam', image: '/images/soto.jpg', best: false, available: true },
 ]
 
 export default function AdminPage() {
@@ -40,16 +45,10 @@ export default function AdminPage() {
 
   const notify = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(''), 2800) }
 
-  useEffect(() => {
-    loadDishes()
-    loadSettings()
-    checkSession()
-    window.scrollTo(0, 0)
-  }, [])
-
   const checkSession = async () => {
     const { data } = await supabase.auth.getSession()
-    if (data.session) setAdminAuth(true)
+    const email = data.session?.user?.email ?? ''
+    setAdminAuth(Boolean(data.session) && isAdminEmail(email))
   }
 
   const loadDishes = async () => {
@@ -65,13 +64,15 @@ export default function AdminPage() {
 
   const seedDefaultDishes = async () => {
     try {
+      const { count } = await supabase.from('dishes').select('id', { count: 'exact', head: true })
+      if ((count ?? 0) > 0 && !window.confirm(`Tabel sudah berisi ${count} menu. Tambah ${defaultDishes.length} menu default lagi?`)) return
       const { error } = await supabase.from('dishes').insert(
         defaultDishes.map(d => ({ name: d.name, description: d.description, price: d.price, category: d.category, time: d.time, image_url: d.image, is_bestseller: d.best, is_available: d.available }))
       )
       if (error) throw error
       notify('Menu default berhasil ditambahkan.')
       loadDishes()
-    } catch (e) { console.error(e); notify('Gagal seed menu.') }
+    } catch (e) { console.error(e); notify('Gagal seed menu. Kemungkinan RLS menolak (butuh login admin).') }
   }
 
   const loadSettings = async () => {
@@ -85,6 +86,10 @@ export default function AdminPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: adminEmail, password: adminPassword })
       if (error) { setAdminLoginError(error.message || 'Email atau password salah'); setAdminPassword(''); return }
+      if (!isAdminEmail(adminEmail)) {
+        await supabase.auth.signOut()
+        setAdminLoginError('Akun ini tidak terdaftar sebagai admin.'); setAdminPassword(''); return
+      }
       setAdminAuth(true); setAdminEmail(''); setAdminPassword(''); setAdminLoginError(''); notify('Login berhasil!')
     } catch { setAdminLoginError('Terjadi kesalahan'); setAdminPassword('') }
   }
@@ -154,10 +159,21 @@ export default function AdminPage() {
     }
   }
 
+  useEffect(() => {
+    loadDishes()
+    loadSettings()
+    checkSession()
+    window.scrollTo(0, 0)
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAdminAuth(Boolean(session) && isAdminEmail(session?.user?.email ?? ''))
+    })
+    return () => { listener.subscription.unsubscribe() }
+  }, [])
+
   const handleSaveNumber = async () => {
     if (tempNumber.trim() && /^\d{10,15}$/.test(tempNumber)) {
       try {
-        const { error } = await supabase.from('settings').update({ whatsapp_number: tempNumber, updated_at: new Date().toISOString() }).eq('id', '1')
+        const { error } = await supabase.from('settings').upsert({ id: '1', whatsapp_number: tempNumber, updated_at: new Date().toISOString() }, { onConflict: 'id' })
         if (error) throw error
         setWhatsappNumber(tempNumber); setEditingNumber(false); notify('Nomor WhatsApp berhasil diperbarui.')
       } catch (err) { notify('Error: Gagal mengupdate nomor'); console.error(err) }
@@ -223,7 +239,7 @@ export default function AdminPage() {
                 <div className="upload-area">
                   <input type="file" name="photo" accept="image/*" onChange={handleImageChange} disabled={uploading} />
                   {(imagePreview || (editing.id !== 'new' && editing.image)) ? (
-                    <div className="upload-preview"><img src={imagePreview || editing.image} alt="Preview" /><button type="button" className="upload-clear" onClick={() => { setImageFile(null); setImagePreview(''); const inp = document.querySelector<HTMLInputElement>('input[name="photo"]'); if (inp) inp.value = '' }}><X size={14} /></button></div>
+                    <div className="upload-preview"><img src={imagePreview || editing.image || FALLBACK_IMG} alt="Preview" onError={e => { e.currentTarget.src = FALLBACK_IMG }} /><button type="button" className="upload-clear" onClick={() => { setImageFile(null); setImagePreview(''); const inp = document.querySelector<HTMLInputElement>('input[name="photo"]'); if (inp) inp.value = '' }}><X size={14} /></button></div>
                   ) : (
                     <div className="upload-placeholder"><Upload size={22} /><span>Klik untuk pilih gambar</span><small>JPG/PNG · maks 4MB</small></div>
                   )}
@@ -293,7 +309,7 @@ export default function AdminPage() {
                 <tbody>
                   {dishes.map(d => (
                     <tr key={d.id}>
-                      <td><div className="table-dish"><img src={d.image} alt="" /><b>{d.name}</b></div></td>
+                      <td><div className="table-dish"><img src={d.image || FALLBACK_IMG} alt="" onError={e => { e.currentTarget.src = FALLBACK_IMG }} /><b>{d.name}</b></div></td>
                       <td>{d.category === 'Menu Utama' ? 'Makanan' : d.category}</td>
                       <td>{d.time || 'Menu Pagi'}</td>
                       <td>{money(d.price)}</td>
