@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Lock, Plus, Settings2, Sparkles, Upload, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Plus, Settings2, Sparkles, Upload, X } from 'lucide-react'
+import '../App.css'
 import { supabase } from '../lib/supabase'
 
 type Dish = { id: string; name: string; description: string; price: number; category: string; time: string; image: string; best: boolean; available: boolean }
@@ -26,6 +27,7 @@ export default function AdminPage() {
   const [adminAuth, setAdminAuth] = useState(false)
   const [adminEmail, setAdminEmail] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [adminLoginError, setAdminLoginError] = useState('')
   const [editing, setEditing] = useState<Dish | null>(null)
   const [notice, setNotice] = useState('')
@@ -172,11 +174,16 @@ export default function AdminPage() {
             <p>Masukkan email dan password untuk mengakses pengelola menu.</p>
             <form onSubmit={handleAdminLogin}>
               <input type="email" placeholder="Email admin" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} autoFocus required />
-              <input type="password" placeholder="Password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} required />
+              <div className="password-field">
+                <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} required />
+                <button type="button" className="password-toggle" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Sembunyikan password' : 'Lihat password'} title={showPassword ? 'Sembunyikan password' : 'Lihat password'}>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {adminLoginError && <div className="login-error">{adminLoginError}</div>}
               <div className="form-actions">
                 <Link to="/" className="btn-outline">Batal</Link>
-                <button type="submit" className="btn-primary">Masuk</button>
+                <button type="submit" className="btn-primary login-submit">Masuk</button>
               </div>
             </form>
           </div>
@@ -193,7 +200,7 @@ export default function AdminPage() {
           <Link to="/" className="admin-back"><ArrowLeft size={17} /> Kembali ke menu</Link>
           <span className="admin-label"><Settings2 size={17} /> Panel pengelola</span>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="modal-close admin-x" onClick={handleLogout} title="Keluar">Keluar</button>
+            <button className="btn-primary login-submit" onClick={handleLogout} title="Keluar">Keluar</button>
           </div>
         </header>
 
